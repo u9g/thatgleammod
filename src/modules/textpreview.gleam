@@ -7,7 +7,7 @@ import ct/stdext
 import ct/update_loop
 import gleam/function
 import gleam/list
-import gleam/option
+import gleam/option.{then}
 import gleam/string
 
 type State {
@@ -58,7 +58,7 @@ pub fn start() {
         let lines_to_render = case in_name_editor(gui), in_lore_editor(gui) {
           // lore editor
           _, True -> {
-            use gui_class <- option.then(reflection.classof(gui))
+            use gui_class <- then(reflection.classof(gui))
 
             let lore_lines: List(String) =
               reflection.get_private_field_value(gui_class, "values")(
@@ -68,11 +68,9 @@ pub fn start() {
               |> std.from_js_array
               |> list.map(std.add_color)
 
-            use parent <- option.then(
-              reflection.call_method("getParent")(gui, #()),
-            )
+            use parent <- then(reflection.call_method("getParent")(gui, #()))
 
-            use parentclass <- option.then(reflection.classof(parent))
+            use parentclass <- then(reflection.classof(parent))
 
             let item: option.Option(item.RawItem) =
               reflection.get_private_field_value(
@@ -80,7 +78,7 @@ pub fn start() {
                 "currentItemStack",
               )(option.Some(parent))
 
-            use raw_item <- option.then(item)
+            use raw_item <- then(item)
 
             let item = item.from_raw_item(raw_item)
 
@@ -88,17 +86,17 @@ pub fn start() {
           }
           // name editor
           True, _ -> {
-            use gui_class <- option.then(reflection.classof(gui))
+            use gui_class <- then(reflection.classof(gui))
 
-            use text_field <- option.then(
+            use text_field <- then(
               reflection.get_private_field_value(gui_class, "field")(
                 option.Some(gui),
               ),
             )
 
-            use text_field_class <- option.then(reflection.classof(text_field))
+            use text_field_class <- then(reflection.classof(text_field))
 
-            use text_field_value <- option.then(
+            use text_field_value <- then(
               reflection.get_private_field_value(
                 text_field_class,
                 "field_146216_j",
@@ -107,11 +105,9 @@ pub fn start() {
 
             let text_field_value = std.add_color(text_field_value)
 
-            use parent <- option.then(
-              reflection.call_method("getParent")(gui, #()),
-            )
+            use parent <- then(reflection.call_method("getParent")(gui, #()))
 
-            use parentclass <- option.then(reflection.classof(parent))
+            use parentclass <- then(reflection.classof(parent))
 
             let item: option.Option(item.RawItem) =
               reflection.get_private_field_value(
@@ -119,7 +115,7 @@ pub fn start() {
                 "currentItemStack",
               )(option.Some(parent))
 
-            use raw_item <- option.then(item)
+            use raw_item <- then(item)
 
             let item = item.from_raw_item(raw_item)
 
