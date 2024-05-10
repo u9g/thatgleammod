@@ -29,8 +29,6 @@ const addCatchClause = () => {
 
       magicString.replace(/\/gsu\)/g, (_) => "/g)");
 
-      // magicString.replace(/\(\) *=> *\{/g, (_) => `function () {`);
-
       return { code: magicString.toString() };
     },
   };
@@ -86,6 +84,24 @@ const astChanger = () => {
                   ${toJs(node.body).slice(1, -1)}
                   ;next_${k} = iter_${k}.next();
                 }
+              }`
+            );
+          } else if (
+            node.type === "FunctionDeclaration" &&
+            node.id.type === "Identifier" &&
+            node.id.name === "makeError" &&
+            node.body.type === "BlockStatement"
+          ) {
+            let { start, end } = node.body;
+            magicString.addSourcemapLocation(start);
+            magicString.addSourcemapLocation(end);
+
+            magicString.remove(start, end);
+
+            magicString.appendRight(
+              start,
+              `{
+                return \`\${variant} in \${module}:\${fn}():\${line}, '\${message}'\`
               }`
             );
           }
