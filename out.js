@@ -31,14 +31,14 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_8 = this[Symbol.iterator]();
-      let next_8 = iter_8.next();
-      while (!next_8.done) {
-        next_8.value;
+      let iter_6 = this[Symbol.iterator]();
+      let next_6 = iter_6.next();
+      while (!next_6.done) {
+        next_6.value;
 
         if (desired <= 0) return true;
         desired--;
-        next_8 = iter_8.next();
+        next_6 = iter_6.next();
       }
     }
     return desired <= 0;
@@ -47,14 +47,14 @@ class List {
   // @internal
   hasLength(desired) {
     {
-      let iter_9 = this[Symbol.iterator]();
-      let next_9 = iter_9.next();
-      while (!next_9.done) {
-        next_9.value;
+      let iter_7 = this[Symbol.iterator]();
+      let next_7 = iter_7.next();
+      while (!next_7.done) {
+        next_7.value;
 
         if (desired <= 0) return false;
         desired--;
-        next_9 = iter_9.next();
+        next_7 = iter_7.next();
       }
     }
     return desired === 0;
@@ -63,12 +63,12 @@ class List {
   countLength() {
     let length = 0;
     {
-      let iter_10 = this[Symbol.iterator]();
-      let next_10 = iter_10.next();
-      while (!next_10.done) {
-        next_10.value;
+      let iter_8 = this[Symbol.iterator]();
+      let next_8 = iter_8.next();
+      while (!next_8.done) {
+        next_8.value;
         ength++;
-        next_10 = iter_10.next();
+        next_8 = iter_8.next();
       }
     }
     return length;
@@ -173,13 +173,13 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_12 = keys(a)[Symbol.iterator]();
-      let next_12 = iter_12.next();
-      while (!next_12.done) {
-        let k = next_12.value;
+      let iter_10 = keys(a)[Symbol.iterator]();
+      let next_10 = iter_10.next();
+      while (!next_10.done) {
+        let k = next_10.value;
 
         values.push(get(a, k), get(b, k));
-        next_12 = iter_12.next();
+        next_10 = iter_10.next();
       }
     }
   }
@@ -249,13 +249,7 @@ function remainderInt(a, b) {
 
 // @internal
 function makeError(variant, module, line, fn, message, extra) {
-  let error = new Error(message);
-  error.gleam_error = variant;
-  error.module = module;
-  error.line = line;
-  error.fn = fn;
-  for (let k in extra) error[k] = extra[k];
-  return error;
+  return `${variant} in ${module}:${fn}():${line}, '${message}'`;
 }
 
 class Lt extends CustomType {}
@@ -546,10 +540,10 @@ register("guiClosed", () => {
 function update_loop__make(init, eventHandlers, displayers) {
   let value = init;
   {
-    let iter_6 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_6 = iter_6.next();
-    while (!next_6.done) {
-      let eventHandler = next_6.value;
+    let iter_11 = eventHandlers.toArray()[Symbol.iterator]();
+    let next_11 = iter_11.next();
+    while (!next_11.done) {
+      let eventHandler = next_11.value;
 
       if (eventHandler instanceof ScrollUp) {
         scrollUp.push(() => {
@@ -591,14 +585,14 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected event handler!!!");
       }
-      next_6 = iter_6.next();
+      next_11 = iter_11.next();
     }
   }
   {
-    let iter_7 = displayers.toArray()[Symbol.iterator]();
-    let next_7 = iter_7.next();
-    while (!next_7.done) {
-      let displayer = next_7.value;
+    let iter_12 = displayers.toArray()[Symbol.iterator]();
+    let next_12 = iter_12.next();
+    while (!next_12.done) {
+      let displayer = next_12.value;
 
       if (displayer instanceof PostGuiRender) {
         postGuiRender.push((gui) => {
@@ -611,7 +605,7 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected displayer!!!");
       }
-      next_7 = iter_7.next();
+      next_12 = iter_12.next();
     }
   }
   // console.log(
@@ -2418,8 +2412,7 @@ function start$1() {
               "modules/itemgiver",
               91,
               "",
-              "panic expression evaluated",
-              {}
+              "panic expression evaluated"
             );
           }
         }
@@ -2508,10 +2501,9 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            39,
+            41,
             "",
-            "Assignment pattern did not match",
-            { value: $ }
+            "Assignment pattern did not match"
           );
         }
         return state;
@@ -2522,10 +2514,9 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            46,
+            48,
             "",
-            "Assignment pattern did not match",
-            { value: $ }
+            "Assignment pattern did not match"
           );
         }
         let gui = $[0];
@@ -2544,10 +2535,9 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            47,
+            49,
             "",
-            "Assignment pattern did not match",
-            { value: $1 }
+            "Assignment pattern did not match"
           );
         }
         return state;
@@ -2578,8 +2568,7 @@ function start() {
                       "modules/textpreview",
                       74,
                       "",
-                      "panic expression evaluated",
-                      {}
+                      "panic expression evaluated"
                     );
                   });
                   let _pipe$2 = std__from_js_array(_pipe$1);
