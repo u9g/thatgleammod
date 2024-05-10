@@ -7,7 +7,7 @@ import ct/stdext
 import ct/update_loop
 import gleam/function
 import gleam/list
-import gleam/option.{None, then}
+import gleam/option.{None, Some, then}
 import gleam/string
 
 type State {
@@ -43,7 +43,7 @@ pub fn start() {
         state
       }),
       update_loop.GuiClosed(handler: fn(state) {
-        let assert option.Some(gui) = gui.current_gui()
+        let assert Some(gui) = gui.current_gui()
         let assert None = case in_name_editor(gui), in_lore_editor(gui) {
           True, _ | _, True -> enable_repeat_events(True)
           _, _ -> None
@@ -55,7 +55,7 @@ pub fn start() {
         use gui <-
           fn(x) {
             case gui {
-              option.Some(gui) -> {
+              Some(gui) -> {
                 x(gui)
               }
               None -> state
@@ -68,9 +68,7 @@ pub fn start() {
             use gui_class <- then(classof(gui))
 
             let lore_lines: List(String) =
-              reflection.get_private_field_value(gui_class, "values")(
-                option.Some(gui),
-              )
+              reflection.get_private_field_value(gui_class, "values")(Some(gui))
               |> option.lazy_unwrap(fn() { panic })
               |> std.from_js_array
               |> list.map(std.add_color)
@@ -83,22 +81,20 @@ pub fn start() {
               reflection.get_private_field_value(
                 parentclass,
                 "currentItemStack",
-              )(option.Some(parent))
+              )(Some(parent))
 
             use raw_item <- then(item)
 
             let item = item.from_raw_item(raw_item)
 
-            option.Some([item |> item.name, ..lore_lines])
+            Some([item |> item.name, ..lore_lines])
           }
           // name editor
           True, _ -> {
             use gui_class <- then(classof(gui))
 
             use text_field <- then(
-              reflection.get_private_field_value(gui_class, "field")(
-                option.Some(gui),
-              ),
+              reflection.get_private_field_value(gui_class, "field")(Some(gui)),
             )
 
             use text_field_class <- then(classof(text_field))
@@ -107,7 +103,7 @@ pub fn start() {
               reflection.get_private_field_value(
                 text_field_class,
                 "field_146216_j",
-              )(option.Some(text_field)),
+              )(Some(text_field)),
             )
 
             let text_field_value = std.add_color(text_field_value)
@@ -120,13 +116,13 @@ pub fn start() {
               reflection.get_private_field_value(
                 parentclass,
                 "currentItemStack",
-              )(option.Some(parent))
+              )(Some(parent))
 
             use raw_item <- then(item)
 
             let item = item.from_raw_item(raw_item)
 
-            option.Some([text_field_value, ..{ item |> item.lore }])
+            Some([text_field_value, ..{ item |> item.lore }])
           }
           _, _ -> {
             None
@@ -134,7 +130,7 @@ pub fn start() {
         }
 
         case lines_to_render {
-          option.Some(text_to_copy) -> ItemText(text_to_copy)
+          Some(text_to_copy) -> ItemText(text_to_copy)
           None -> NoText
         }
       }),
