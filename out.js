@@ -31,14 +31,14 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_2 = this[Symbol.iterator]();
-      let next_2 = iter_2.next();
-      while (!next_2.done) {
-        next_2.value;
+      let iter_8 = this[Symbol.iterator]();
+      let next_8 = iter_8.next();
+      while (!next_8.done) {
+        next_8.value;
 
         if (desired <= 0) return true;
         desired--;
-        next_2 = iter_2.next();
+        next_8 = iter_8.next();
       }
     }
     return desired <= 0;
@@ -47,14 +47,14 @@ class List {
   // @internal
   hasLength(desired) {
     {
-      let iter_3 = this[Symbol.iterator]();
-      let next_3 = iter_3.next();
-      while (!next_3.done) {
-        next_3.value;
+      let iter_9 = this[Symbol.iterator]();
+      let next_9 = iter_9.next();
+      while (!next_9.done) {
+        next_9.value;
 
         if (desired <= 0) return false;
         desired--;
-        next_3 = iter_3.next();
+        next_9 = iter_9.next();
       }
     }
     return desired === 0;
@@ -63,12 +63,12 @@ class List {
   countLength() {
     let length = 0;
     {
-      let iter_4 = this[Symbol.iterator]();
-      let next_4 = iter_4.next();
-      while (!next_4.done) {
-        next_4.value;
+      let iter_10 = this[Symbol.iterator]();
+      let next_10 = iter_10.next();
+      while (!next_10.done) {
+        next_10.value;
         ength++;
-        next_4 = iter_4.next();
+        next_10 = iter_10.next();
       }
     }
     return length;
@@ -173,13 +173,13 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_6 = keys(a)[Symbol.iterator]();
-      let next_6 = iter_6.next();
-      while (!next_6.done) {
-        let k = next_6.value;
+      let iter_12 = keys(a)[Symbol.iterator]();
+      let next_12 = iter_12.next();
+      while (!next_12.done) {
+        let k = next_12.value;
 
         values.push(get(a, k), get(b, k));
-        next_6 = iter_6.next();
+        next_12 = iter_12.next();
       }
     }
   }
@@ -546,10 +546,10 @@ register("guiClosed", () => {
 function update_loop__make(init, eventHandlers, displayers) {
   let value = init;
   {
-    let iter_0 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_0 = iter_0.next();
-    while (!next_0.done) {
-      let eventHandler = next_0.value;
+    let iter_6 = eventHandlers.toArray()[Symbol.iterator]();
+    let next_6 = iter_6.next();
+    while (!next_6.done) {
+      let eventHandler = next_6.value;
 
       if (eventHandler instanceof ScrollUp) {
         scrollUp.push(() => {
@@ -591,14 +591,14 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected event handler!!!");
       }
-      next_0 = iter_0.next();
+      next_6 = iter_6.next();
     }
   }
   {
-    let iter_1 = displayers.toArray()[Symbol.iterator]();
-    let next_1 = iter_1.next();
-    while (!next_1.done) {
-      let displayer = next_1.value;
+    let iter_7 = displayers.toArray()[Symbol.iterator]();
+    let next_7 = iter_7.next();
+    while (!next_7.done) {
+      let displayer = next_7.value;
 
       if (displayer instanceof PostGuiRender) {
         postGuiRender.push((gui) => {
@@ -611,7 +611,7 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected displayer!!!");
       }
-      next_1 = iter_1.next();
+      next_7 = iter_7.next();
     }
   }
   // console.log(
@@ -2461,6 +2461,13 @@ function start$1() {
 
 class NoText extends CustomType {}
 
+class ItemText extends CustomType {
+  constructor(text) {
+    super();
+    this.text = text;
+  }
+}
+
 function enable_repeat_events(bool) {
   return reflection__get_static_method(
     "Keyboard",
@@ -2545,133 +2552,156 @@ function start() {
         }
         return state;
       }),
+      new Tick((state) => {
+        let gui = gui__current_gui();
+        return ((x) => {
+          if (gui instanceof Some) {
+            let gui$1 = gui[0];
+            return x(gui$1);
+          } else {
+            return state;
+          }
+        })((gui) => {
+          let lines_to_render = (() => {
+            let $ = in_name_editor(gui);
+            let $1 = in_lore_editor(gui);
+            if ($1) {
+              return then$(reflection__classof(gui), (gui_class) => {
+                let lore_lines = (() => {
+                  let _pipe = reflection__get_private_field_value(
+                    gui_class,
+                    "values"
+                  )(new Some(gui));
+                  let _pipe$1 = lazy_unwrap(_pipe, () => {
+                    throw makeError(
+                      "panic",
+                      "modules/textpreview",
+                      74,
+                      "",
+                      "panic expression evaluated",
+                      {}
+                    );
+                  });
+                  let _pipe$2 = std__from_js_array(_pipe$1);
+                  return map$1(_pipe$2, std__add_color);
+                })();
+                return then$(
+                  reflection__call_method("getParent")(gui, []),
+                  (parent) => {
+                    return then$(reflection__classof(parent), (parentclass) => {
+                      let item = reflection__get_private_field_value(
+                        parentclass,
+                        "currentItemStack"
+                      )(new Some(parent));
+                      return then$(item, (raw_item) => {
+                        let item$1 = item__from_raw_item(raw_item);
+                        return new Some(
+                          prepend(
+                            (() => {
+                              let _pipe = item$1;
+                              return item__name(_pipe);
+                            })(),
+                            lore_lines
+                          )
+                        );
+                      });
+                    });
+                  }
+                );
+              });
+            } else if ($) {
+              return then$(reflection__classof(gui), (gui_class) => {
+                return then$(
+                  reflection__get_private_field_value(
+                    gui_class,
+                    "field"
+                  )(new Some(gui)),
+                  (text_field) => {
+                    return then$(
+                      reflection__classof(text_field),
+                      (text_field_class) => {
+                        return then$(
+                          reflection__get_private_field_value(
+                            text_field_class,
+                            "field_146216_j"
+                          )(new Some(text_field)),
+                          (text_field_value) => {
+                            let text_field_value$1 =
+                              std__add_color(text_field_value);
+                            return then$(
+                              reflection__call_method("getParent")(gui, []),
+                              (parent) => {
+                                return then$(
+                                  reflection__classof(parent),
+                                  (parentclass) => {
+                                    let item =
+                                      reflection__get_private_field_value(
+                                        parentclass,
+                                        "currentItemStack"
+                                      )(new Some(parent));
+                                    return then$(item, (raw_item) => {
+                                      let item$1 =
+                                        item__from_raw_item(raw_item);
+                                      return new Some(
+                                        prepend(
+                                          text_field_value$1,
+                                          (() => {
+                                            let _pipe = item$1;
+                                            return item__lore(_pipe);
+                                          })()
+                                        )
+                                      );
+                                    });
+                                  }
+                                );
+                              }
+                            );
+                          }
+                        );
+                      }
+                    );
+                  }
+                );
+              });
+            } else {
+              return new None();
+            }
+          })();
+          if (lines_to_render instanceof Some) {
+            let text_to_copy = lines_to_render[0];
+            return new ItemText(text_to_copy);
+          } else {
+            return new NoText();
+          }
+        });
+      }),
     ]),
     toList([
-      new PostGuiRender((key, _, gui) => {
+      new PostGuiRender((key, state, _) => {
         let _pipe = key;
         render__scale(_pipe, 2, 2);
-        let lines_to_render = (() => {
-          let $ = in_name_editor(gui);
-          let $1 = in_lore_editor(gui);
-          if ($1) {
-            return then$(reflection__classof(gui), (gui_class) => {
-              let lore_lines = (() => {
-                let _pipe$1 = reflection__get_private_field_value(
-                  gui_class,
-                  "values"
-                )(new Some(gui));
-                let _pipe$2 = lazy_unwrap(_pipe$1, () => {
-                  throw makeError(
-                    "panic",
-                    "modules/textpreview",
-                    67,
-                    "",
-                    "panic expression evaluated",
-                    {}
-                  );
-                });
-                let _pipe$3 = std__from_js_array(_pipe$2);
-                return map$1(_pipe$3, std__add_color);
-              })();
-              return then$(
-                reflection__call_method("getParent")(gui, []),
-                (parent) => {
-                  return then$(reflection__classof(parent), (parentclass) => {
-                    let item = reflection__get_private_field_value(
-                      parentclass,
-                      "currentItemStack"
-                    )(new Some(parent));
-                    return then$(item, (raw_item) => {
-                      let item$1 = item__from_raw_item(raw_item);
-                      return new Some(
-                        prepend(
-                          (() => {
-                            let _pipe$1 = item$1;
-                            return item__name(_pipe$1);
-                          })(),
-                          lore_lines
-                        )
-                      );
-                    });
-                  });
-                }
-              );
-            });
-          } else if ($) {
-            return then$(reflection__classof(gui), (gui_class) => {
-              return then$(
-                reflection__get_private_field_value(
-                  gui_class,
-                  "field"
-                )(new Some(gui)),
-                (text_field) => {
-                  return then$(
-                    reflection__classof(text_field),
-                    (text_field_class) => {
-                      return then$(
-                        reflection__get_private_field_value(
-                          text_field_class,
-                          "field_146216_j"
-                        )(new Some(text_field)),
-                        (text_field_value) => {
-                          let text_field_value$1 =
-                            std__add_color(text_field_value);
-                          return then$(
-                            reflection__call_method("getParent")(gui, []),
-                            (parent) => {
-                              return then$(
-                                reflection__classof(parent),
-                                (parentclass) => {
-                                  let item =
-                                    reflection__get_private_field_value(
-                                      parentclass,
-                                      "currentItemStack"
-                                    )(new Some(parent));
-                                  return then$(item, (raw_item) => {
-                                    let item$1 = item__from_raw_item(raw_item);
-                                    return new Some(
-                                      prepend(
-                                        text_field_value$1,
-                                        (() => {
-                                          let _pipe$1 = item$1;
-                                          return item__lore(_pipe$1);
-                                        })()
-                                      )
-                                    );
-                                  });
-                                }
-                              );
-                            }
-                          );
-                        }
-                      );
-                    }
-                  );
-                }
-              );
-            });
+        (() => {
+          if (state instanceof ItemText) {
+            let lines_to_render = state.text;
+            return reflection__get_static_method(
+              "net.minecraftforge.fml.client.config.GuiUtils",
+              "drawHoveringText"
+            )([
+              std__to_js_array(lines_to_render),
+              0,
+              25,
+              render__get_screen_width(),
+              render__get_screen_height(),
+              -1,
+              render__get_font_renderer(),
+            ]);
           } else {
             return new None();
           }
         })();
-        if (lines_to_render instanceof Some) {
-          let lines_to_render$1 = lines_to_render[0];
-          reflection__get_static_method(
-            "net.minecraftforge.fml.client.config.GuiUtils",
-            "drawHoveringText"
-          )([
-            std__to_js_array(lines_to_render$1),
-            0,
-            25,
-            render__get_screen_width(),
-            render__get_screen_height(),
-            -1,
-            render__get_font_renderer(),
-          ]);
-        }
+
         let _pipe$1 = key;
-        render__scale(_pipe$1, 1, 1);
-        return undefined;
+        return render__scale(_pipe$1, 1, 1);
       }),
     ])
   );

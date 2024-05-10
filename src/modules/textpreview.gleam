@@ -1,13 +1,13 @@
-import ct/gui
+import ct/gui.{is_instance_of}
 import ct/item
-import ct/reflection.{classof}
+import ct/reflection.{classof, get_static_method}
 import ct/render
 import ct/std
 import ct/stdext
 import ct/update_loop
 import gleam/function
 import gleam/list
-import gleam/option.{then}
+import gleam/option.{None, then}
 import gleam/string
 
 type State {
@@ -16,7 +16,7 @@ type State {
 }
 
 fn enable_repeat_events(bool: Bool) {
-  reflection.get_static_method("Keyboard", "enableRepeatEvents")(#(bool))
+  get_static_method("Keyboard", "enableRepeatEvents")(#(bool))
 }
 
 const name_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringModifier"
@@ -24,11 +24,11 @@ const name_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringModifier"
 const lore_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringArrayModifier"
 
 fn in_lore_editor(gui: gui.Gui) -> Bool {
-  gui.is_instance_of(gui, lore_editor_class_name)
+  is_instance_of(gui, lore_editor_class_name)
 }
 
 fn in_name_editor(gui: gui.Gui) -> Bool {
-  gui.is_instance_of(gui, name_editor_class_name)
+  is_instance_of(gui, name_editor_class_name)
 }
 
 pub fn start() {
@@ -36,24 +36,31 @@ pub fn start() {
     NoText,
     [
       update_loop.GuiOpened(handler: fn(state, gui) {
-        let assert option.None = case in_name_editor(gui), in_lore_editor(gui) {
+        let assert None = case in_name_editor(gui), in_lore_editor(gui) {
           True, _ | _, True -> enable_repeat_events(True)
-          _, _ -> option.None
+          _, _ -> None
         }
         state
       }),
       update_loop.GuiClosed(handler: fn(state) {
         let assert option.Some(gui) = gui.current_gui()
-        let assert option.None = case in_name_editor(gui), in_lore_editor(gui) {
+        let assert None = case in_name_editor(gui), in_lore_editor(gui) {
           True, _ | _, True -> enable_repeat_events(True)
-          _, _ -> option.None
+          _, _ -> None
         }
         state
       }),
-    ],
-    [
-      update_loop.PostGuiRender(fn(key, _state, gui) {
-        key |> render.scale(2, 2)
+      update_loop.Tick(handler: fn(state) {
+        let gui = gui.current_gui()
+        use gui <-
+          fn(x) {
+            case gui {
+              option.Some(gui) -> {
+                x(gui)
+              }
+              None -> state
+            }
+          }
 
         let lines_to_render = case in_name_editor(gui), in_lore_editor(gui) {
           // lore editor
@@ -122,13 +129,23 @@ pub fn start() {
             option.Some([text_field_value, ..{ item |> item.lore }])
           }
           _, _ -> {
-            option.None
+            None
           }
         }
 
         case lines_to_render {
-          option.Some(lines_to_render) -> {
-            reflection.get_static_method(
+          option.Some(text_to_copy) -> ItemText(text_to_copy)
+          None -> NoText
+        }
+      }),
+    ],
+    [
+      update_loop.PostGuiRender(fn(key, state, _gui) {
+        key |> render.scale(2, 2)
+
+        let _ = case state {
+          ItemText(lines_to_render) -> {
+            get_static_method(
               "net.minecraftforge.fml.client.config.GuiUtils",
               "drawHoveringText",
             )(#(
@@ -141,12 +158,10 @@ pub fn start() {
               render.font_renderer(),
             ))
           }
-          option.None -> option.None
+          NoText -> None
         }
 
         key |> render.scale(1, 1)
-
-        Nil
       }),
     ],
   )

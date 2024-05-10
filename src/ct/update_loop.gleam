@@ -21,8 +21,8 @@ pub type EventHandler(a) {
 }
 
 pub type Displayer(a, b) {
-  PostGuiRender(handler: fn(PostGuiRenderKey, a, Gui) -> b)
-  HotbarRender(handler: fn(PostGuiRenderKey, a) -> b)
+  PostGuiRender(handler: fn(PostGuiRenderKey, a, Gui) -> Nil)
+  HotbarRender(handler: fn(PostGuiRenderKey, a) -> Nil)
 }
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "update_loop__make")
