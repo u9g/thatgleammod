@@ -1,6 +1,6 @@
 import ct/gui
 import ct/item
-import ct/reflection
+import ct/reflection.{classof}
 import ct/render
 import ct/std
 import ct/stdext
@@ -58,7 +58,7 @@ pub fn start() {
         let lines_to_render = case in_name_editor(gui), in_lore_editor(gui) {
           // lore editor
           _, True -> {
-            use gui_class <- then(reflection.classof(gui))
+            use gui_class <- then(classof(gui))
 
             let lore_lines: List(String) =
               reflection.get_private_field_value(gui_class, "values")(
@@ -70,7 +70,7 @@ pub fn start() {
 
             use parent <- then(reflection.call_method("getParent")(gui, #()))
 
-            use parentclass <- then(reflection.classof(parent))
+            use parentclass <- then(classof(parent))
 
             let item: option.Option(item.RawItem) =
               reflection.get_private_field_value(
@@ -86,7 +86,7 @@ pub fn start() {
           }
           // name editor
           True, _ -> {
-            use gui_class <- then(reflection.classof(gui))
+            use gui_class <- then(classof(gui))
 
             use text_field <- then(
               reflection.get_private_field_value(gui_class, "field")(
@@ -94,7 +94,7 @@ pub fn start() {
               ),
             )
 
-            use text_field_class <- then(reflection.classof(text_field))
+            use text_field_class <- then(classof(text_field))
 
             use text_field_value <- then(
               reflection.get_private_field_value(
@@ -107,7 +107,7 @@ pub fn start() {
 
             use parent <- then(reflection.call_method("getParent")(gui, #()))
 
-            use parentclass <- then(reflection.classof(parent))
+            use parentclass <- then(classof(parent))
 
             let item: option.Option(item.RawItem) =
               reflection.get_private_field_value(
