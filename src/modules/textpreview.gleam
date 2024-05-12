@@ -1,15 +1,19 @@
 import ct/gui.{is_instance_of}
 import ct/item
 import ct/reflection.{
-  call_method, classof, get_private_field_value, get_static_method,
+  type FieldReflection, call_method, classof, get_private_field_value,
+  get_static_method,
 }
 import ct/render
-import ct/std
-import ct/stdext
+import ct/std.{is_key_down}
+import ct/stdext.{panic_unwrap_o}
 import ct/update_loop
+import gleam/bool
 import gleam/function
+import gleam/int
 import gleam/list
 import gleam/option.{None, Some, then}
+import gleam/result
 import gleam/string
 
 type State {
@@ -33,10 +37,142 @@ fn in_name_editor(gui: gui.Gui) -> Bool {
   is_instance_of(gui, name_editor_class_name)
 }
 
+fn unwrap(result: Result(a, b)) -> a {
+  case result {
+    Ok(a_value) -> a_value
+    Error(err) -> panic as string.inspect(err)
+  }
+}
+
+const is_focused_field_name = "field_146213_o"
+
+type TextField
+
+fn is_shift_down() {
+  is_key_down("KEY_LSHIFT") || is_key_down("KEY_RSHIFT")
+}
+
+fn is_ctrl_down() {
+  is_key_down("KEY_LCONTROL") || is_key_down("KEY_RCONTROL")
+}
+
+fn get_text_fields(gui: gui.Gui) -> List(#(FieldReflection(Bool, a), Int)) {
+  reflection.get_priv_value("tfs")(gui)
+  |> unwrap
+  |> std.from_js_array
+  |> list.index_map(with: fn(x, i) {
+    #(reflection.field(is_focused_field_name)(x) |> unwrap, i)
+  })
+}
+
 pub fn start() {
   update_loop.make(
     NoText,
     [
+      update_loop.CustomKeybind(
+        description: "Add a new line to the lore editors",
+        gui_key_handler: fn(state, gui) {
+          use <- bool.guard(
+            when: !in_lore_editor(gui) || !is_ctrl_down(),
+            return: state,
+          )
+
+          let text_fields = get_text_fields(gui)
+
+          let focused_text_field =
+            list.find_map(text_fields, with: fn(text_field_with_i) {
+              let #(text_field, i) = text_field_with_i
+
+              let is_focused = text_field.get()
+
+              use <- bool.guard(when: !is_focused, return: Error(Nil))
+
+              text_field.set(False)
+              Ok(i)
+            })
+
+          use focused_text_field_ix <- stdext.then_or(
+            focused_text_field,
+            or: state,
+          )
+
+          let f =
+            reflection.field("values")(gui)
+            |> unwrap
+
+          let values = f.get() |> std.from_js_array |> std.to_js_array
+
+          call_method("splice")(values, #(focused_text_field_ix + 1, 0, ""))
+
+          let list_as_array_list =
+            reflection.new_instance("ArrayList")(#(values)) |> panic_unwrap_o
+
+          f.set(list_as_array_list)
+
+          reflection.call_priv_method("defineMenu")(gui, #())
+
+          let is_focused =
+            // re-get text fields after calling defineMenu
+            get_text_fields(gui)
+            |> list.at(focused_text_field_ix + 1)
+            |> unwrap
+
+          { is_focused.0 }.set(True)
+
+          state
+        },
+        handler: fn(state) { state },
+        key: "KEY_RETURN",
+      ),
+      update_loop.CustomKeybind(
+        description: "Go forward or backward on line of lore editor",
+        gui_key_handler: fn(state, gui) {
+          use <- bool.guard(when: !in_lore_editor(gui), return: state)
+
+          let text_fields = get_text_fields(gui)
+
+          let focused_text_field =
+            list.find_map(text_fields, with: fn(text_field_with_i) {
+              let #(text_field, i) = text_field_with_i
+
+              let is_focused = text_field.get()
+
+              use <- bool.guard(when: !is_focused, return: Error(Nil))
+
+              text_field.set(False)
+              Ok(i)
+            })
+
+          use focused_text_field <- stdext.then_or(
+            focused_text_field,
+            or: state,
+          )
+
+          let is_shift_down =
+            is_key_down("KEY_LSHIFT") || is_key_down("KEY_RSHIFT")
+
+          let focus_this_ix = case is_shift_down {
+            False -> focused_text_field + 1
+            True -> focused_text_field - 1
+          }
+
+          use text_field_to_focus_ix <- stdext.then_or(
+            list.length(text_fields) |> int.modulo(focus_this_ix, _),
+            or: state,
+          )
+
+          use text_field <- stdext.then_or(
+            text_fields |> list.at(text_field_to_focus_ix),
+            or: state,
+          )
+
+          { text_field.0 }.set(True)
+
+          state
+        },
+        handler: fn(state) { state },
+        key: "KEY_TAB",
+      ),
       update_loop.GuiOpened(handler: fn(state, gui) {
         let assert None = case in_name_editor(gui), in_lore_editor(gui) {
           True, _ | _, True -> enable_repeat_events(True)
@@ -139,7 +275,7 @@ pub fn start() {
     ],
     [
       update_loop.PostGuiRender(fn(key, state, _gui) {
-        key |> render.scale(2, 2)
+        key |> render.scale(1.25, 1.25)
 
         let _ = case state {
           ItemText(lines_to_render) -> {
@@ -159,7 +295,7 @@ pub fn start() {
           NoText -> None
         }
 
-        key |> render.scale(1, 1)
+        key |> render.scale(1.0, 1.0)
       }),
     ],
   )

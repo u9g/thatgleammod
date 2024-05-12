@@ -31,14 +31,14 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_6 = this[Symbol.iterator]();
-      let next_6 = iter_6.next();
-      while (!next_6.done) {
-        next_6.value;
+      let iter_8 = this[Symbol.iterator]();
+      let next_8 = iter_8.next();
+      while (!next_8.done) {
+        next_8.value;
 
         if (desired <= 0) return true;
         desired--;
-        next_6 = iter_6.next();
+        next_8 = iter_8.next();
       }
     }
     return desired <= 0;
@@ -47,14 +47,14 @@ class List {
   // @internal
   hasLength(desired) {
     {
-      let iter_7 = this[Symbol.iterator]();
-      let next_7 = iter_7.next();
-      while (!next_7.done) {
-        next_7.value;
+      let iter_9 = this[Symbol.iterator]();
+      let next_9 = iter_9.next();
+      while (!next_9.done) {
+        next_9.value;
 
         if (desired <= 0) return false;
         desired--;
-        next_7 = iter_7.next();
+        next_9 = iter_9.next();
       }
     }
     return desired === 0;
@@ -63,12 +63,12 @@ class List {
   countLength() {
     let length = 0;
     {
-      let iter_8 = this[Symbol.iterator]();
-      let next_8 = iter_8.next();
-      while (!next_8.done) {
-        next_8.value;
+      let iter_10 = this[Symbol.iterator]();
+      let next_10 = iter_10.next();
+      while (!next_10.done) {
+        next_10.value;
         ength++;
-        next_8 = iter_8.next();
+        next_10 = iter_10.next();
       }
     }
     return length;
@@ -111,6 +111,66 @@ class NonEmpty extends List {
     this.head = head;
     this.tail = tail;
   }
+}
+
+class BitArray {
+  constructor(buffer) {
+    if (!(buffer instanceof Uint8Array)) {
+      throw "BitArray can only be constructed from a Uint8Array";
+    }
+    this.buffer = buffer;
+  }
+
+  // @internal
+  get length() {
+    return this.buffer.length;
+  }
+
+  // @internal
+  byteAt(index) {
+    return this.buffer[index];
+  }
+
+  // @internal
+  floatAt(index) {
+    return byteArrayToFloat(this.buffer.slice(index, index + 8));
+  }
+
+  // @internal
+  intFromSlice(start, end) {
+    return byteArrayToInt(this.buffer.slice(start, end));
+  }
+
+  // @internal
+  binaryFromSlice(start, end) {
+    return new BitArray(this.buffer.slice(start, end));
+  }
+
+  // @internal
+  sliceAfter(index) {
+    return new BitArray(this.buffer.slice(index));
+  }
+}
+
+class UtfCodepoint {
+  constructor(value) {
+    this.value = value;
+  }
+}
+
+// @internal
+function byteArrayToInt(byteArray) {
+  byteArray = byteArray.reverse();
+  let value = 0;
+  for (let i = byteArray.length - 1; i >= 0; i--) {
+    value = value * 256 + byteArray[i];
+  }
+  return value;
+}
+
+// @internal
+function byteArrayToFloat(byteArray) {
+  return new Float64Array(byteArray.reverse().buffer)[0];
 }
 
 class Result extends CustomType {
@@ -173,13 +233,13 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_10 = keys(a)[Symbol.iterator]();
-      let next_10 = iter_10.next();
-      while (!next_10.done) {
-        let k = next_10.value;
+      let iter_12 = keys(a)[Symbol.iterator]();
+      let next_12 = iter_12.next();
+      while (!next_12.done) {
+        let k = next_12.value;
 
         values.push(get(a, k), get(b, k));
-        next_10 = iter_10.next();
+        next_12 = iter_12.next();
       }
     }
   }
@@ -242,7 +302,9 @@ function structurallyCompatibleObjects(a, b) {
 
 // @internal
 function remainderInt(a, b) {
-  {
+  if (b === 0) {
+    return 0;
+  } else {
     return a % b;
   }
 }
@@ -257,6 +319,14 @@ class Lt extends CustomType {}
 class Eq extends CustomType {}
 
 class Gt extends CustomType {}
+
+function guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence;
+  } else {
+    return alternative();
+  }
+}
 
 function lazy_guard(requirement, consequence, alternative) {
   if (requirement) {
@@ -284,7 +354,7 @@ function to_result(option, e) {
   }
 }
 
-function unwrap(option, default$) {
+function unwrap$1(option, default$) {
   if (option instanceof Some) {
     let x = option[0];
     return x;
@@ -317,6 +387,30 @@ function then$(option, fun) {
     return fun(x);
   } else {
     return new None();
+  }
+}
+
+class FailedToGetBaseClass extends CustomType {}
+
+class FailedToGetDeclaredField extends CustomType {
+  constructor(name) {
+    super();
+    this.name = name;
+  }
+}
+
+class ThrownError extends CustomType {
+  constructor(error) {
+    super();
+    this.error = error;
+  }
+}
+
+class FieldReflection extends CustomType {
+  constructor(get, set) {
+    super();
+    this.get = get;
+    this.set = set;
   }
 }
 
@@ -419,6 +513,47 @@ function reflection__get_private_field_value(baseClass, fieldName) {
     }
   };
 }
+function reflection__field(fieldName) {
+  return (baseObj) => {
+    let classof = reflection__classof(baseObj);
+    if (classof instanceof None) {
+      return new Error(new FailedToGetBaseClass());
+    }
+    let field = classof[0].getDeclaredField(fieldName);
+    try {
+      if (!field) {
+        return new Error(new FailedToGetDeclaredField(fieldName));
+      }
+      field.setAccessible(true);
+      return new Ok(
+        new FieldReflection(
+          () => field.get(baseObj),
+          (newValue) => field.set(baseObj, newValue)
+        )
+      );
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
+    }
+  };
+}
+function reflection__get_priv_value(fieldName) {
+  return (baseObj) => {
+    let classof = reflection__classof(baseObj);
+    if (classof instanceof None) {
+      return new Error(new FailedToGetBaseClass());
+    }
+    let field = classof[0].getDeclaredField(fieldName);
+    try {
+      if (!field) {
+        return new Error(new FailedToGetDeclaredField(fieldName));
+      }
+      field.setAccessible(true);
+      return new Ok(field.get(baseObj));
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
+    }
+  };
+}
 function reflection__new_instance(classNameStr) {
   let ty = !classNameStr.includes(".")
     ? global[classNameStr]
@@ -439,6 +574,21 @@ function reflection__call_method(methodNameStr) {
   return (baseObject, args) => {
     try {
       let value = baseObject[methodNameStr](...args);
+      if (!value) {
+        return new None();
+      }
+      return new Some(value);
+    } catch (e) {
+      return new None();
+    }
+  };
+}
+function reflection__call_priv_method(methodNameStr) {
+  return (baseObject, args) => {
+    try {
+      let methodHandle = baseObject.getClass().getDeclaredMethod(methodNameStr);
+      methodHandle.setAccessible(true);
+      let value = methodHandle.invoke(baseObject, ...args);
       if (!value) {
         return new None();
       }
@@ -540,10 +690,10 @@ register("guiClosed", () => {
 function update_loop__make(init, eventHandlers, displayers) {
   let value = init;
   {
-    let iter_11 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_11 = iter_11.next();
-    while (!next_11.done) {
-      let eventHandler = next_11.value;
+    let iter_0 = eventHandlers.toArray()[Symbol.iterator]();
+    let next_0 = iter_0.next();
+    while (!next_0.done) {
+      let eventHandler = next_0.value;
 
       if (eventHandler instanceof ScrollUp) {
         scrollUp.push(() => {
@@ -585,14 +735,14 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected event handler!!!");
       }
-      next_11 = iter_11.next();
+      next_0 = iter_0.next();
     }
   }
   {
-    let iter_12 = displayers.toArray()[Symbol.iterator]();
-    let next_12 = iter_12.next();
-    while (!next_12.done) {
-      let displayer = next_12.value;
+    let iter_1 = displayers.toArray()[Symbol.iterator]();
+    let next_1 = iter_1.next();
+    while (!next_1.done) {
+      let displayer = next_1.value;
 
       if (displayer instanceof PostGuiRender) {
         postGuiRender.push((gui) => {
@@ -605,7 +755,7 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected displayer!!!");
       }
-      next_12 = iter_12.next();
+      next_1 = iter_1.next();
     }
   }
   // console.log(
@@ -685,6 +835,9 @@ function gui__current_gui() {
 }
 function std__from_js_array(arr) {
   return toList([...arr]);
+}
+function std__is_key_down(keyName) {
+  return Keyboard.isKeyDown(Keyboard[keyName]);
 }
 function std__to_js_array(arr) {
   return arr.toArray();
@@ -824,7 +977,7 @@ function start$2() {
                   let _pipe$1 = map$2(_pipe, (creative_tab) => {
                     return creative_tab === inventory_creative_tab_ix;
                   });
-                  return unwrap(_pipe$1, false);
+                  return unwrap$1(_pipe$1, false);
                 })();
                 return lazy_guard(
                   !is_on_inventory_tab,
@@ -899,6 +1052,38 @@ function max(a, b) {
   }
 }
 
+function modulo(dividend, divisor) {
+  if (divisor === 0) {
+    return new Error(undefined);
+  } else {
+    let remainder$1 = remainderInt(dividend, divisor);
+    let $ = remainder$1 * divisor < 0;
+    if ($) {
+      return new Ok(remainder$1 + divisor);
+    } else {
+      return new Ok(remainder$1);
+    }
+  }
+}
+
+function count_length(loop$list, loop$count) {
+  while (true) {
+    let list = loop$list;
+    let count = loop$count;
+    if (list.atLeastLength(1)) {
+      let list$1 = list.tail;
+      loop$list = list$1;
+      loop$count = count + 1;
+    } else {
+      return count;
+    }
+  }
+}
+
+function length$1(list) {
+  return count_length(list, 0);
+}
+
 function do_reverse(loop$remaining, loop$accumulator) {
   while (true) {
     let remaining = loop$remaining;
@@ -916,6 +1101,15 @@ function do_reverse(loop$remaining, loop$accumulator) {
 
 function reverse(xs) {
   return do_reverse(xs, toList([]));
+}
+
+function first(list) {
+  if (list.hasLength(0)) {
+    return new Error(undefined);
+  } else {
+    let x = list.head;
+    return new Ok(x);
+  }
 }
 
 function do_filter_map$1(loop$list, loop$fun, loop$acc) {
@@ -991,6 +1185,57 @@ function do_index_map(loop$list, loop$fun, loop$index, loop$acc) {
 
 function index_map(list, fun) {
   return do_index_map(list, fun, 0, toList([]));
+}
+
+function drop(loop$list, loop$n) {
+  while (true) {
+    let list = loop$list;
+    let n = loop$n;
+    let $ = n <= 0;
+    if ($) {
+      return list;
+    } else {
+      if (list.hasLength(0)) {
+        return toList([]);
+      } else {
+        let xs = list.tail;
+        loop$list = xs;
+        loop$n = n - 1;
+      }
+    }
+  }
+}
+
+function find_map(loop$haystack, loop$fun) {
+  while (true) {
+    let haystack = loop$haystack;
+    let fun = loop$fun;
+    if (haystack.hasLength(0)) {
+      return new Error(undefined);
+    } else {
+      let x = haystack.head;
+      let rest$1 = haystack.tail;
+      let $ = fun(x);
+      if ($.isOk()) {
+        let x$1 = $[0];
+        return new Ok(x$1);
+      } else {
+        loop$haystack = rest$1;
+        loop$fun = fun;
+      }
+    }
+  }
+}
+
+function at(list, index) {
+  let $ = index >= 0;
+  if ($) {
+    let _pipe = list;
+    let _pipe$1 = drop(_pipe, index);
+    return first(_pipe$1);
+  } else {
+    return new Error(undefined);
+  }
 }
 
 function each$1(loop$list, loop$f) {
@@ -2058,6 +2303,92 @@ function map_insert(key, value, map) {
   return map.set(key, value);
 }
 
+function inspect$1(v) {
+  let t = typeof v;
+  if (v === true) return "True";
+  if (v === false) return "False";
+  if (v === null) return "//js(null)";
+  if (v === undefined) return "Nil";
+  if (t === "string") return JSON.stringify(v);
+  if (t === "bigint" || t === "number") return v.toString();
+  if (Array.isArray(v)) return `#(${v.map(inspect$1).join(", ")})`;
+  if (v instanceof List) return inspectList(v);
+  if (v instanceof UtfCodepoint) return inspectUtfCodepoint(v);
+  if (v instanceof BitArray) return inspectBitArray(v);
+  if (v instanceof CustomType) return inspectCustomType(v);
+  if (v instanceof Dict) return inspectDict(v);
+  if (v instanceof Set) return `//js(Set(${[...v].map(inspect$1).join(", ")}))`;
+  if (v instanceof RegExp) return `//js(${v})`;
+  if (v instanceof Date) return `//js(Date("${v.toISOString()}"))`;
+  if (v instanceof Function) {
+    let args = [];
+    {
+      let iter_5 = Array(v.length).keys()[Symbol.iterator]();
+      let next_5 = iter_5.next();
+      while (!next_5.done) {
+        let i = next_5.value;
+        rgs.push(String.fromCharCode(i + 97));
+        next_5 = iter_5.next();
+      }
+    }
+    return `//fn(${args.join(", ")}) { ... }`;
+  }
+  return inspectObject(v);
+}
+
+function inspectDict(map) {
+  let body = "dict.from_list([";
+  let first = true;
+  map.forEach((value, key) => {
+    if (!first) body = body + ", ";
+    body = body + "#(" + inspect$1(key) + ", " + inspect$1(value) + ")";
+    first = false;
+  });
+  return body + "])";
+}
+
+function inspectObject(v) {
+  let name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
+  let props = [];
+  {
+    let iter_6 = Object.keys(v)[Symbol.iterator]();
+    let next_6 = iter_6.next();
+    while (!next_6.done) {
+      let k = next_6.value;
+
+      props.push(`${inspect$1(k)}: ${inspect$1(v[k])}`);
+      next_6 = iter_6.next();
+    }
+  }
+  let body = props.length ? " " + props.join(", ") + " " : "";
+  let head = name === "Object" ? "" : name + " ";
+  return `//js(${head}{${body}})`;
+}
+
+function inspectCustomType(record) {
+  let props = Object.keys(record)
+    .map((label) => {
+      let value = inspect$1(record[label]);
+      return isNaN(parseInt(label)) ? `${label}: ${value}` : value;
+    })
+    .join(", ");
+  return props
+    ? `${record.constructor.name}(${props})`
+    : record.constructor.name;
+}
+
+function inspectList(list) {
+  return `[${list.toArray().map(inspect$1).join(", ")}]`;
+}
+
+function inspectBitArray(bits) {
+  return `<<${Array.from(bits.buffer).join(", ")}>>`;
+}
+
+function inspectUtfCodepoint(codepoint) {
+  return `//utfcodepoint(${String.fromCodePoint(codepoint.value)})`;
+}
+
 function new$() {
   return new_map();
 }
@@ -2287,6 +2618,11 @@ function split(x, substring) {
   }
 }
 
+function inspect(term) {
+  let _pipe = inspect$1(term);
+  return to_string$1(_pipe);
+}
+
 function internal_get_from_give_code(input) {
   return reflection__get_static_method(
     "fr.atesab.act.utils.ItemUtils",
@@ -2452,6 +2788,27 @@ function start$1() {
   );
 }
 
+function then_or(item, callback, or) {
+  if (item.isOk()) {
+    let x = item[0];
+    return callback(x);
+  } else {
+    return or;
+  }
+}
+
+function panic_unwrap_o(x) {
+  return lazy_unwrap(x, () => {
+    throw makeError(
+      "panic",
+      "ct/stdext",
+      101,
+      "",
+      "panic expression evaluated"
+    );
+  });
+}
+
 class NoText extends CustomType {}
 
 class ItemText extends CustomType {
@@ -2468,6 +2825,20 @@ function enable_repeat_events(bool) {
   )([bool]);
 }
 
+function unwrap(result) {
+  if (result.isOk()) {
+    let a_value = result[0];
+    return a_value;
+  } else {
+    let err = result[0];
+    throw makeError("panic", "modules/textpreview", 43, "unwrap", inspect(err));
+  }
+}
+
+function is_ctrl_down() {
+  return std__is_key_down("KEY_LCONTROL") || std__is_key_down("KEY_RCONTROL");
+}
+
 let name_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringModifier";
 
 function in_name_editor(gui) {
@@ -2481,10 +2852,146 @@ function in_lore_editor(gui) {
   return gui__is_instance_of(gui, lore_editor_class_name);
 }
 
+let is_focused_field_name = "field_146213_o";
+
+function get_text_fields(gui) {
+  let _pipe = reflection__get_priv_value("tfs")(gui);
+  let _pipe$1 = unwrap(_pipe);
+  let _pipe$2 = std__from_js_array(_pipe$1);
+  return index_map(_pipe$2, (x, i) => {
+    return [
+      (() => {
+        let _pipe$3 = reflection__field(is_focused_field_name)(x);
+        return unwrap(_pipe$3);
+      })(),
+      i,
+    ];
+  });
+}
+
 function start() {
   return update_loop__make(
     new NoText(),
     toList([
+      new CustomKeybind(
+        "KEY_RETURN",
+        "Add a new line to the lore editors",
+        (state) => {
+          return state;
+        },
+        (state, gui) => {
+          return guard(!in_lore_editor(gui) || !is_ctrl_down(), state, () => {
+            let text_fields = get_text_fields(gui);
+            let focused_text_field = find_map(
+              text_fields,
+              (text_field_with_i) => {
+                let text_field = text_field_with_i[0];
+                let i = text_field_with_i[1];
+                let is_focused = text_field.get();
+                return guard(!is_focused, new Error(undefined), () => {
+                  text_field.set(false);
+                  return new Ok(i);
+                });
+              }
+            );
+            return then_or(
+              focused_text_field,
+              (focused_text_field_ix) => {
+                let f = (() => {
+                  let _pipe = reflection__field("values")(gui);
+                  return unwrap(_pipe);
+                })();
+                let values = (() => {
+                  let _pipe = f.get();
+                  let _pipe$1 = std__from_js_array(_pipe);
+                  return std__to_js_array(_pipe$1);
+                })();
+                reflection__call_method("splice")(values, [
+                  focused_text_field_ix + 1,
+                  0,
+                  "",
+                ]);
+                let list_as_array_list = (() => {
+                  let _pipe = reflection__new_instance("ArrayList")([values]);
+                  return panic_unwrap_o(_pipe);
+                })();
+                f.set(list_as_array_list);
+                reflection__call_priv_method("defineMenu")(gui, []);
+                let is_focused = (() => {
+                  let _pipe = get_text_fields(gui);
+                  let _pipe$1 = at(_pipe, focused_text_field_ix + 1);
+                  return unwrap(_pipe$1);
+                })();
+                is_focused[0].set(true);
+                return state;
+              },
+              state
+            );
+          });
+        }
+      ),
+      new CustomKeybind(
+        "KEY_TAB",
+        "Go forward or backward on line of lore editor",
+        (state) => {
+          return state;
+        },
+        (state, gui) => {
+          return guard(!in_lore_editor(gui), state, () => {
+            let text_fields = get_text_fields(gui);
+            let focused_text_field = find_map(
+              text_fields,
+              (text_field_with_i) => {
+                let text_field = text_field_with_i[0];
+                let i = text_field_with_i[1];
+                let is_focused = text_field.get();
+                return guard(!is_focused, new Error(undefined), () => {
+                  text_field.set(false);
+                  return new Ok(i);
+                });
+              }
+            );
+            return then_or(
+              focused_text_field,
+              (focused_text_field) => {
+                let is_shift_down$1 =
+                  std__is_key_down("KEY_LSHIFT") ||
+                  std__is_key_down("KEY_RSHIFT");
+                let focus_this_ix = (() => {
+                  if (!is_shift_down$1) {
+                    return focused_text_field + 1;
+                  } else {
+                    return focused_text_field - 1;
+                  }
+                })();
+                return then_or(
+                  (() => {
+                    let _pipe = length$1(text_fields);
+                    return ((_capture) => {
+                      return modulo(focus_this_ix, _capture);
+                    })(_pipe);
+                  })(),
+                  (text_field_to_focus_ix) => {
+                    return then_or(
+                      (() => {
+                        let _pipe = text_fields;
+                        return at(_pipe, text_field_to_focus_ix);
+                      })(),
+                      (text_field) => {
+                        text_field[0].set(true);
+                        return state;
+                      },
+                      state
+                    );
+                  },
+                  state
+                );
+              },
+              state
+            );
+          });
+        }
+      ),
       new GuiOpened((state, gui) => {
         let $ = (() => {
           let $1 = in_name_editor(gui);
@@ -2501,7 +3008,7 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            41,
+            177,
             "",
             "Assignment pattern did not match"
           );
@@ -2514,7 +3021,7 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            48,
+            184,
             "",
             "Assignment pattern did not match"
           );
@@ -2535,7 +3042,7 @@ function start() {
           throw makeError(
             "assignment_no_match",
             "modules/textpreview",
-            49,
+            185,
             "",
             "Assignment pattern did not match"
           );
@@ -2566,7 +3073,7 @@ function start() {
                     throw makeError(
                       "panic",
                       "modules/textpreview",
-                      74,
+                      213,
                       "",
                       "panic expression evaluated"
                     );
@@ -2668,7 +3175,7 @@ function start() {
     toList([
       new PostGuiRender((key, state, _) => {
         let _pipe = key;
-        render__scale(_pipe, 2, 2);
+        render__scale(_pipe, 1.25, 1.25);
         (() => {
           if (state instanceof ItemText) {
             let lines_to_render = state.text;
@@ -2690,7 +3197,7 @@ function start() {
         })();
 
         let _pipe$1 = key;
-        return render__scale(_pipe$1, 1, 1);
+        return render__scale(_pipe$1, 1.0, 1.0);
       }),
     ])
   );

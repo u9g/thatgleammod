@@ -1,5 +1,6 @@
 import gleam/list
-import gleam/option
+import gleam/option.{type Option, lazy_unwrap as o_lazy_unwrap}
+import gleam/result.{lazy_unwrap as r_lazy_unwrap}
 
 fn internal_enumerate(
   list: List(a),
@@ -77,6 +78,15 @@ pub fn then_(item: Result(a, b), callback: fn(a) -> c) -> Nil {
   }
 }
 
+pub fn then_or(item: Result(a, b), callback: fn(a) -> c, or or: c) -> c {
+  case item {
+    Ok(x) -> {
+      callback(x)
+    }
+    Error(_) -> or
+  }
+}
+
 pub fn then(item: option.Option(a), callback: fn(a) -> c) -> Nil {
   case item {
     option.Some(x) -> {
@@ -85,4 +95,12 @@ pub fn then(item: option.Option(a), callback: fn(a) -> c) -> Nil {
     }
     option.None -> Nil
   }
+}
+
+pub fn panic_unwrap_o(x: Option(a)) -> a {
+  o_lazy_unwrap(x, fn() { panic })
+}
+
+pub fn panic_unwrap_r(x: Result(a, b)) -> a {
+  r_lazy_unwrap(x, fn() { panic })
 }

@@ -9,7 +9,7 @@ pub fn render_string(
 ) -> Nil
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "render__scale")
-pub fn scale(key: PostGuiRenderKey, x: Int, y: Int) -> Nil
+pub fn scale(key: PostGuiRenderKey, x: Float, y: Float) -> Nil
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "render__get_screen_width")
 pub fn screen_width() -> Int

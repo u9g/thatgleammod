@@ -27,3 +27,6 @@ pub fn from_js_array(array: a) -> List(b)
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "std__to_js_array")
 pub fn to_js_array(array: List(a)) -> b
+
+@external(javascript, "../../../../../src/ct/ct_std.js", "std__is_key_down")
+pub fn is_key_down(key_name: String) -> Bool

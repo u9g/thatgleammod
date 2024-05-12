@@ -1,5 +1,11 @@
 import gleam/option.{type Option}
 
+pub type ReflectionError {
+  FailedToGetBaseClass
+  FailedToGetDeclaredField(name: String)
+  ThrownError(error: String)
+}
+
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__get_static_method")
 pub fn get_static_method(
   base_class: String,
@@ -26,9 +32,34 @@ pub fn get_private_field_value(
   // a = the based object to call this on, giving a None will result in getting the static field's value
 ) -> fn(Option(a)) -> Option(b)
 
+pub type FieldReflection(a, b) {
+  FieldReflection(get: fn() -> a, set: fn(a) -> Nil)
+}
+
+@external(javascript, "../../../../../src/ct/ct_std.js", "reflection__field")
+pub fn field(
+  field_name: String,
+) -> fn(a) -> Result(FieldReflection(b, c), ReflectionError)
+
+@external(javascript, "../../../../../src/ct/ct_std.js", "reflection__get_priv_value")
+pub fn get_priv_value(
+  field_name: String,
+  // a = the based object to call this on, giving a None will result in getting the static field's value
+) -> fn(a) -> Result(b, ReflectionError)
+
+@external(javascript, "../../../../../src/ct/ct_std.js", "reflection__set_priv_value")
+pub fn set_priv_value(
+  field_name: String,
+  // a = the based object to call this on, giving a None will result in getting the static field's value
+) -> fn(a, value) -> Result(Nil, ReflectionError)
+
 // c is a tuple with all arguments to call on the base object a
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__call_method")
 pub fn call_method(method_name: String) -> fn(a, c) -> Option(b)
+
+// c is a tuple with all arguments to call on the base object a
+@external(javascript, "../../../../../src/ct/ct_std.js", "reflection__call_priv_method")
+pub fn call_priv_method(method_name: String) -> fn(a, c) -> Option(b)
 
 // c is a tuple with all arguments
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__new_instance")

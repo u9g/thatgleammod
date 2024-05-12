@@ -71,6 +71,13 @@ export function reflection__classof(obj) {
   }
 }
 
+import {
+  FailedToGetBaseClass,
+  FailedToGetDeclaredField,
+  ThrownError,
+  FieldReflection,
+} from "../../build/dev/javascript/examplemod/ct/reflection.mjs";
+
 export function reflection__get_private_field_value(baseClass, fieldName) {
   let field = baseClass.getDeclaredField(fieldName);
   return (baseObj) => {
@@ -86,6 +93,68 @@ export function reflection__get_private_field_value(baseClass, fieldName) {
     } catch (e) {
       console.trace(e);
       return new None();
+    }
+  };
+}
+
+export function reflection__field(fieldName) {
+  return (baseObj) => {
+    let classof = reflection__classof(baseObj);
+    if (classof instanceof None) {
+      return new Error(new FailedToGetBaseClass());
+    }
+    let field = classof[0].getDeclaredField(fieldName);
+    try {
+      if (!field) {
+        return new Error(new FailedToGetDeclaredField(fieldName));
+      }
+      field.setAccessible(true);
+      return new Ok(
+        new FieldReflection(
+          () => field.get(baseObj),
+          (newValue) => field.set(baseObj, newValue)
+        )
+      );
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
+    }
+  };
+}
+
+export function reflection__get_priv_value(fieldName) {
+  return (baseObj) => {
+    let classof = reflection__classof(baseObj);
+    if (classof instanceof None) {
+      return new Error(new FailedToGetBaseClass());
+    }
+    let field = classof[0].getDeclaredField(fieldName);
+    try {
+      if (!field) {
+        return new Error(new FailedToGetDeclaredField(fieldName));
+      }
+      field.setAccessible(true);
+      return new Ok(field.get(baseObj));
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
+    }
+  };
+}
+
+export function reflection__set_priv_value(fieldName) {
+  return (baseObj, value) => {
+    let classof = reflection__classof(baseObj);
+    if (classof instanceof None) {
+      return new Error(new FailedToGetBaseClass());
+    }
+    let field = classof[0].getDeclaredField(fieldName);
+    try {
+      if (!field) {
+        return new Error(new FailedToGetDeclaredField(fieldName));
+      }
+      field.setAccessible(true);
+      return new Ok(field.set(baseObj, value));
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
     }
   };
 }
@@ -112,6 +181,24 @@ export function reflection__call_method(methodNameStr) {
   return (baseObject, args) => {
     try {
       const value = baseObject[methodNameStr](...args);
+      if (!value) {
+        return new None();
+      }
+      return new Some(value);
+    } catch (e) {
+      return new None();
+    }
+  };
+}
+
+export function reflection__call_priv_method(methodNameStr) {
+  return (baseObject, args) => {
+    try {
+      const methodHandle = baseObject
+        .getClass()
+        .getDeclaredMethod(methodNameStr);
+      methodHandle.setAccessible(true);
+      const value = methodHandle.invoke(baseObject, ...args);
       if (!value) {
         return new None();
       }
@@ -387,6 +474,10 @@ export function gui__current_gui() {
 
 export function std__from_js_array(arr) {
   return toList([...arr]);
+}
+
+export function std__is_key_down(keyName) {
+  return Keyboard.isKeyDown(Keyboard[keyName]);
 }
 
 export function std__to_js_array(arr) {
