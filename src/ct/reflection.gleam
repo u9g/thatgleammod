@@ -23,7 +23,7 @@ pub fn get_field_value(
 pub type Class
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__classof")
-pub fn classof(base_obj: a) -> Option(Class)
+pub fn classof(base_obj: a) -> Result(Class, ReflectionError)
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__get_private_field_value")
 pub fn get_private_field_value(

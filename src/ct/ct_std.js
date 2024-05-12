@@ -63,11 +63,11 @@ export function reflection__classof(obj) {
   try {
     const value = obj.getClass();
     if (!value) {
-      return new None();
+      return new FailedToGetBaseClass();
     }
-    return new Some(value);
+    return new Ok(value);
   } catch (e) {
-    return new None();
+    return new Error(new ThrownError(e.toString()));
   }
 }
 

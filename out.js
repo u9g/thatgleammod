@@ -1,11 +1,11 @@
-let Promise$1 = class Promise {};
+let Promise$1 = class Promise{};
 // Values marked with @internal are not part of the public API and may change
 // without notice.
 
 class CustomType {
   withFields(fields) {
     let properties = Object.keys(this).map((label) =>
-      label in fields ? fields[label] : this[label]
+      label in fields ? fields[label] : this[label],
     );
     return new this.constructor(...properties);
   }
@@ -31,46 +31,46 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_8 = this[Symbol.iterator]();
-      let next_8 = iter_8.next();
-      while (!next_8.done) {
-        next_8.value;
-
-        if (desired <= 0) return true;
-        desired--;
-        next_8 = iter_8.next();
-      }
-    }
+                let iter_2 = (this)[Symbol.iterator]();
+                let next_2 = iter_2.next();
+                while (!next_2.done) {
+                  next_2.value;
+                  
+  if (desired <= 0) return true;
+  desired--;
+next_2 = iter_2.next();
+                }
+              }
     return desired <= 0;
   }
 
   // @internal
   hasLength(desired) {
     {
-      let iter_9 = this[Symbol.iterator]();
-      let next_9 = iter_9.next();
-      while (!next_9.done) {
-        next_9.value;
-
-        if (desired <= 0) return false;
-        desired--;
-        next_9 = iter_9.next();
-      }
-    }
+                let iter_3 = (this)[Symbol.iterator]();
+                let next_3 = iter_3.next();
+                while (!next_3.done) {
+                  next_3.value;
+                  
+  if (desired <= 0) return false;
+  desired--;
+next_3 = iter_3.next();
+                }
+              }
     return desired === 0;
   }
 
   countLength() {
     let length = 0;
     {
-      let iter_10 = this[Symbol.iterator]();
-      let next_10 = iter_10.next();
-      while (!next_10.done) {
-        next_10.value;
-        ength++;
-        next_10 = iter_10.next();
-      }
-    }
+                let iter_4 = (this)[Symbol.iterator]();
+                let next_4 = iter_4.next();
+                while (!next_4.done) {
+                  next_4.value;
+                  ength++
+                  ;next_4 = iter_4.next();
+                }
+              }
     return length;
   }
 }
@@ -233,15 +233,15 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_12 = keys(a)[Symbol.iterator]();
-      let next_12 = iter_12.next();
-      while (!next_12.done) {
-        let k = next_12.value;
-
-        values.push(get(a, k), get(b, k));
-        next_12 = iter_12.next();
-      }
-    }
+                let iter_6 = (keys(a))[Symbol.iterator]();
+                let next_6 = iter_6.next();
+                while (!next_6.done) {
+                  let k = next_6.value;
+                  
+  values.push(get(a, k), get(b, k));
+next_6 = iter_6.next();
+                }
+              }
   }
 
   return true;
@@ -311,8 +311,8 @@ function remainderInt(a, b) {
 
 // @internal
 function makeError(variant, module, line, fn, message, extra) {
-  return `${variant} in ${module}:${fn}():${line}, '${message}'`;
-}
+                return `${variant} in ${module}:${fn}():${line}, '${message}'`
+              }
 
 class Lt extends CustomType {}
 
@@ -482,177 +482,177 @@ class HotbarRender extends CustomType {
 }
 
 function std__log(toLog) {
-  return ChatLib.chat(toLog);
+    return ChatLib.chat(toLog);
 }
 function reflection__classof(obj) {
-  try {
-    let value = obj.getClass();
-    if (!value) {
-      return new None();
+    try {
+        let value = obj.getClass();
+        if (!value) {
+            return new FailedToGetBaseClass();
+        }
+        return new Ok(value);
     }
-    return new Some(value);
-  } catch (e) {
-    return new None();
-  }
+    catch (e) {
+        return new Error(new ThrownError(e.toString()));
+    }
 }
 function reflection__get_private_field_value(baseClass, fieldName) {
-  let field = baseClass.getDeclaredField(fieldName);
-  return (baseObj) => {
-    try {
-      if (!field) {
-        console.log("return early");
-        return new None();
-      }
-      field.setAccessible(true);
-      return new Some(
-        baseObj instanceof Some ? field.get(baseObj[0]) : field.get(null)
-      );
-    } catch (e) {
-      console.trace(e);
-      return new None();
-    }
-  };
+    let field = baseClass.getDeclaredField(fieldName);
+    return (baseObj) => {
+        try {
+            if (!field) {
+                console.log("return early");
+                return new None();
+            }
+            field.setAccessible(true);
+            return new Some(baseObj instanceof Some ? field.get(baseObj[0]) : field.get(null));
+        }
+        catch (e) {
+            console.trace(e);
+            return new None();
+        }
+    };
 }
 function reflection__field(fieldName) {
-  return (baseObj) => {
-    let classof = reflection__classof(baseObj);
-    if (classof instanceof None) {
-      return new Error(new FailedToGetBaseClass());
-    }
-    let field = classof[0].getDeclaredField(fieldName);
-    try {
-      if (!field) {
-        return new Error(new FailedToGetDeclaredField(fieldName));
-      }
-      field.setAccessible(true);
-      return new Ok(
-        new FieldReflection(
-          () => field.get(baseObj),
-          (newValue) => field.set(baseObj, newValue)
-        )
-      );
-    } catch (e) {
-      return new Error(new ThrownError(e.toString()));
-    }
-  };
+    return (baseObj) => {
+        let classof = reflection__classof(baseObj);
+        if (classof instanceof None) {
+            return new Error(new FailedToGetBaseClass());
+        }
+        let field = classof[0].getDeclaredField(fieldName);
+        try {
+            if (!field) {
+                return new Error(new FailedToGetDeclaredField(fieldName));
+            }
+            field.setAccessible(true);
+            return new Ok(new FieldReflection(() => field.get(baseObj), (newValue) => field.set(baseObj, newValue)));
+        }
+        catch (e) {
+            return new Error(new ThrownError(e.toString()));
+        }
+    };
 }
 function reflection__get_priv_value(fieldName) {
-  return (baseObj) => {
-    let classof = reflection__classof(baseObj);
-    if (classof instanceof None) {
-      return new Error(new FailedToGetBaseClass());
-    }
-    let field = classof[0].getDeclaredField(fieldName);
-    try {
-      if (!field) {
-        return new Error(new FailedToGetDeclaredField(fieldName));
-      }
-      field.setAccessible(true);
-      return new Ok(field.get(baseObj));
-    } catch (e) {
-      return new Error(new ThrownError(e.toString()));
-    }
-  };
+    return (baseObj) => {
+        let classof = reflection__classof(baseObj);
+        if (classof instanceof None) {
+            return new Error(new FailedToGetBaseClass());
+        }
+        let field = classof[0].getDeclaredField(fieldName);
+        try {
+            if (!field) {
+                return new Error(new FailedToGetDeclaredField(fieldName));
+            }
+            field.setAccessible(true);
+            return new Ok(field.get(baseObj));
+        }
+        catch (e) {
+            return new Error(new ThrownError(e.toString()));
+        }
+    };
 }
 function reflection__new_instance(classNameStr) {
-  let ty = !classNameStr.includes(".")
-    ? global[classNameStr]
-    : Java.type(classNameStr);
-  return (args) => {
-    try {
-      let value = new ty(...args);
-      if (!value) {
-        return new None();
-      }
-      return new Some(value);
-    } catch (e) {
-      return new None();
-    }
-  };
+    let ty = !classNameStr.includes(".")
+        ? global[classNameStr]
+        : Java.type(classNameStr);
+    return (args) => {
+        try {
+            let value = new ty(...args);
+            if (!value) {
+                return new None();
+            }
+            return new Some(value);
+        }
+        catch (e) {
+            return new None();
+        }
+    };
 }
 function reflection__call_method(methodNameStr) {
-  return (baseObject, args) => {
-    try {
-      let value = baseObject[methodNameStr](...args);
-      if (!value) {
-        return new None();
-      }
-      return new Some(value);
-    } catch (e) {
-      return new None();
-    }
-  };
+    return (baseObject, args) => {
+        try {
+            let value = baseObject[methodNameStr](...args);
+            if (!value) {
+                return new None();
+            }
+            return new Some(value);
+        }
+        catch (e) {
+            return new None();
+        }
+    };
 }
 function reflection__call_priv_method(methodNameStr) {
-  return (baseObject, args) => {
-    try {
-      let methodHandle = baseObject.getClass().getDeclaredMethod(methodNameStr);
-      methodHandle.setAccessible(true);
-      let value = methodHandle.invoke(baseObject, ...args);
-      if (!value) {
-        return new None();
-      }
-      return new Some(value);
-    } catch (e) {
-      return new None();
-    }
-  };
+    return (baseObject, args) => {
+        try {
+            let methodHandle = baseObject
+                .getClass()
+                .getDeclaredMethod(methodNameStr);
+            methodHandle.setAccessible(true);
+            let value = methodHandle.invoke(baseObject, ...args);
+            if (!value) {
+                return new None();
+            }
+            return new Some(value);
+        }
+        catch (e) {
+            return new None();
+        }
+    };
 }
 function reflection__get_field_value(baseClassStr, methodNameStr) {
-  return (onObject) => {
-    try {
-      let type = Java.type(baseClassStr);
-      if (!type) {
-        return new None();
-      }
-      let field = type.class.getDeclaredField(methodNameStr);
-      field.setAccessible(true);
-      let fieldValue = field.get(onObject instanceof Some ? onObject[0] : null);
-      if (fieldValue) {
-        return new Some(fieldValue);
-      } else {
-        return new None();
-      }
-    } catch (e) {
-      return new None();
-    }
-  };
+    return (onObject) => {
+        try {
+            let type = Java.type(baseClassStr);
+            if (!type) {
+                return new None();
+            }
+            let field = type.class.getDeclaredField(methodNameStr);
+            field.setAccessible(true);
+            let fieldValue = field.get(onObject instanceof Some ? onObject[0] : null);
+            if (fieldValue) {
+                return new Some(fieldValue);
+            }
+            else {
+                return new None();
+            }
+        }
+        catch (e) {
+            return new None();
+        }
+    };
 }
 function reflection__get_static_method(baseClassStr, methodNameStr) {
-  return (args) => {
-    try {
-      let value = Java.type(baseClassStr)[methodNameStr](...args);
-      if (!value) {
-        return new None();
-      }
-      return new Some(value);
-    } catch (e) {
-      return new None();
-    }
-  };
+    return (args) => {
+        try {
+            let value = Java.type(baseClassStr)[methodNameStr](...args);
+            if (!value) {
+                return new None();
+            }
+            return new Some(value);
+        }
+        catch (e) {
+            return new None();
+        }
+    };
 }
-let C10PacketCreativeInventoryAction = Java.type(
-  "net.minecraft.network.play.client.C10PacketCreativeInventoryAction"
-);
+let C10PacketCreativeInventoryAction = Java.type("net.minecraft.network.play.client.C10PacketCreativeInventoryAction");
 let loadItemstack = (slot, itemStack) => {
-  Client.sendPacket(
-    new C10PacketCreativeInventoryAction(
-      slot, // slot, 36=hotbar slot 1
-      itemStack // item to get as a minecraft item stack object
-    )
-  );
+    Client.sendPacket(new C10PacketCreativeInventoryAction(slot, // slot, 36=hotbar slot 1
+    itemStack // item to get as a minecraft item stack object
+    ));
 };
 function player__set_hotbar_slot_to_item(itemToSet, hotbarSlotToFill) {
-  loadItemstack(36 + hotbarSlotToFill, itemToSet.getItemStack());
+    loadItemstack(36 + hotbarSlotToFill, itemToSet.getItemStack());
 }
 function player__clear_slot(hotbarSlotToFill) {
-  loadItemstack(36 + hotbarSlotToFill, null);
+    loadItemstack(36 + hotbarSlotToFill, null);
 }
 function item__from_raw_item(rawItem) {
-  return new Item(rawItem);
+    return new Item(rawItem);
 }
 function std__read_file(fromPath) {
-  return FileLib.read(fromPath);
+    return FileLib.read(fromPath);
 }
 let scrollUp = [];
 let scrollDown = [];
@@ -663,184 +663,174 @@ let guiKey = [];
 let guiOpened = [];
 let guiClosed = [];
 register("scrolled", (x, y, direction) => {
-  if (direction === 1) {
-    scrollUp.forEach((fn) => fn());
-  } else if (direction === -1) {
-    scrollDown.forEach((fn) => fn());
-  }
+    if (direction === 1) {
+        scrollUp.forEach((fn) => fn());
+    }
+    else if (direction === -1) {
+        scrollDown.forEach((fn) => fn());
+    }
 });
 register("tick", () => {
-  tick.forEach((fn) => fn());
+    tick.forEach((fn) => fn());
 });
 register("postGuiRender", (x, y, gui) => {
-  postGuiRender.forEach((fn) => fn(gui));
+    postGuiRender.forEach((fn) => fn(gui));
 });
 register("renderHotbar", () => {
-  hotbarRender.forEach((fn) => fn());
+    hotbarRender.forEach((fn) => fn());
 });
 register("guiKey", (char, keycode, gui, event) => {
-  guiKey.forEach((fn) => fn(char, keycode, gui, event));
+    guiKey.forEach((fn) => fn(char, keycode, gui, event));
 });
 register("guiOpened", (e) => {
-  guiOpened.forEach((fn) => fn(e.gui));
+    guiOpened.forEach((fn) => fn(e.gui));
 });
 register("guiClosed", () => {
-  guiClosed.forEach((fn) => fn());
+    guiClosed.forEach((fn) => fn());
 });
 function update_loop__make(init, eventHandlers, displayers) {
-  let value = init;
-  {
-    let iter_0 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_0 = iter_0.next();
-    while (!next_0.done) {
-      let eventHandler = next_0.value;
-
-      if (eventHandler instanceof ScrollUp) {
-        scrollUp.push(() => {
-          value = eventHandler.handler(value);
-        });
-      } else if (eventHandler instanceof ScrollDown) {
-        scrollDown.push(() => {
-          value = eventHandler.handler(value);
-        });
-      } else if (eventHandler instanceof Tick) {
-        tick.push(() => {
-          value = eventHandler.handler(value);
-        });
-      } else if (eventHandler instanceof CustomCommand) {
-        register("command", (user) => {
-          value = eventHandler.handler(value);
-        }).setName(eventHandler.custom_command_name);
-      } else if (eventHandler instanceof CustomKeybind) {
-        let keybind = Client.getKeyBindFromKey(
-          Keyboard[eventHandler.key],
-          eventHandler.description
-        );
-        keybind.registerKeyPress(() => {
-          value = eventHandler.handler(value);
-        });
-        guiKey.push((char, keycode, gui, event) => {
-          if (keybind.getKeyCode() === keycode) {
-            value = eventHandler.gui_key_handler(value, gui);
-          }
-        });
-      } else if (eventHandler instanceof GuiOpened) {
-        guiOpened.push((gui) => {
-          value = eventHandler.handler(value, gui);
-        });
-      } else if (eventHandler instanceof GuiClosed) {
-        guiClosed.push(() => {
-          value = eventHandler.handler(value);
-        });
-      } else {
-        ChatLib.chat("unexpected event handler!!!");
+    let value = init;
+    {
+                let iter_0 = (eventHandlers.toArray())[Symbol.iterator]();
+                let next_0 = iter_0.next();
+                while (!next_0.done) {
+                  let eventHandler = next_0.value;
+                  
+  if (eventHandler instanceof ScrollUp) {
+    scrollUp.push(() => {
+      value = eventHandler.handler(value);
+    });
+  } else if (eventHandler instanceof ScrollDown) {
+    scrollDown.push(() => {
+      value = eventHandler.handler(value);
+    });
+  } else if (eventHandler instanceof Tick) {
+    tick.push(() => {
+      value = eventHandler.handler(value);
+    });
+  } else if (eventHandler instanceof CustomCommand) {
+    register("command", user => {
+      value = eventHandler.handler(value);
+    }).setName(eventHandler.custom_command_name);
+  } else if (eventHandler instanceof CustomKeybind) {
+    let keybind = Client.getKeyBindFromKey(Keyboard[eventHandler.key], eventHandler.description);
+    keybind.registerKeyPress(() => {
+      value = eventHandler.handler(value);
+    });
+    guiKey.push((char, keycode, gui, event) => {
+      if (keybind.getKeyCode() === keycode) {
+        value = eventHandler.gui_key_handler(value, gui);
       }
-      next_0 = iter_0.next();
-    }
+    });
+  } else if (eventHandler instanceof GuiOpened) {
+    guiOpened.push(gui => {
+      value = eventHandler.handler(value, gui);
+    });
+  } else if (eventHandler instanceof GuiClosed) {
+    guiClosed.push(() => {
+      value = eventHandler.handler(value);
+    });
+  } else {
+    ChatLib.chat("unexpected event handler!!!");
   }
-  {
-    let iter_1 = displayers.toArray()[Symbol.iterator]();
-    let next_1 = iter_1.next();
-    while (!next_1.done) {
-      let displayer = next_1.value;
-
-      if (displayer instanceof PostGuiRender) {
-        postGuiRender.push((gui) => {
-          displayer.handler(undefined, value, gui);
-        });
-      } else if (displayer instanceof HotbarRender) {
-        hotbarRender.push(() => {
-          displayer.handler(undefined, value);
-        });
-      } else {
-        ChatLib.chat("unexpected displayer!!!");
-      }
-      next_1 = iter_1.next();
-    }
+next_0 = iter_0.next();
+                }
+              }
+    {
+                let iter_1 = (displayers.toArray())[Symbol.iterator]();
+                let next_1 = iter_1.next();
+                while (!next_1.done) {
+                  let displayer = next_1.value;
+                  
+  if (displayer instanceof PostGuiRender) {
+    postGuiRender.push(gui => {
+      displayer.handler(undefined, value, gui);
+    });
+  } else if (displayer instanceof HotbarRender) {
+    hotbarRender.push(() => {
+      displayer.handler(undefined, value);
+    });
+  } else {
+    ChatLib.chat("unexpected displayer!!!");
   }
-  // console.log(
-  //   JSON.stringify(
-  //     eventHandlers.toArray(),
-  //     function functionReplacer(key, value) {
-  //       if (typeof value === "function") {
-  //         return "function";
-  //       }
-  //       return value;
-  //     }
-  //   )
-  // );
+next_1 = iter_1.next();
+                }
+              }
+    // console.log(
+    //   JSON.stringify(
+    //     eventHandlers.toArray(),
+    //     function functionReplacer(key, value) {
+    //       if (typeof value === "function") {
+    //         return "function";
+    //       }
+    //       return value;
+    //     }
+    //   )
+    // );
 }
 function render__render_string(_, x, y, toWrite) {
-  Renderer.drawStringWithShadow(toWrite, x, y);
+    Renderer.drawStringWithShadow(toWrite, x, y);
 }
 function render__scale(_, x, y) {
-  Renderer.scale(x, y);
+    Renderer.scale(x, y);
 }
 function player__get_item_in_slot(slot) {
-  let inventory = Player.getInventory();
-  if (inventory) {
-    let item = inventory.getStackInSlot(slot);
-    if (item) {
-      return new Some(item);
+    let inventory = Player.getInventory();
+    if (inventory) {
+        let item = inventory.getStackInSlot(slot);
+        if (item) {
+            return new Some(item);
+        }
     }
-  }
-  return new None();
+    return new None();
 }
 function gui__is_instance_of(gui, className) {
-  return gui.class.getName() === className;
+    return gui.class.getName() === className;
 }
 function gui__slot_under_mouse(gui) {
-  var _a;
-  let slot =
-    (_a = gui === null || gui === void 0 ? void 0 : gui.getSlotUnderMouse) ===
-      null || _a === void 0
-      ? void 0
-      : _a.call(gui);
-  if (slot) {
-    return new Some(new Slot(slot));
-  }
-  return new None();
+    var _a;
+    let slot = (_a = gui === null || gui === void 0 ? void 0 : gui.getSlotUnderMouse) === null || _a === void 0 ? void 0 : _a.call(gui);
+    if (slot) {
+        return new Some(new Slot(slot));
+    }
+    return new None();
 }
 function item__name(item) {
-  return item.getName();
+    return item.getName();
 }
 function item__lore(item) {
-  let itemLore = item.getLore().slice(1);
-  itemLore.pop();
-  return toList(itemLore);
+    let itemLore = item.getLore().slice(1);
+    itemLore.pop();
+    return toList(itemLore);
 }
 function render__get_screen_width() {
-  return Renderer.screen.getWidth();
+    return Renderer.screen.getWidth();
 }
 function render__get_screen_height() {
-  return Renderer.screen.getHeight();
+    return Renderer.screen.getHeight();
 }
 function render__get_font_renderer() {
-  return Renderer.getFontRenderer();
+    return Renderer.getFontRenderer();
 }
 function std__add_color(string) {
-  return ChatLib.addColor(string);
+    return ChatLib.addColor(string);
 }
 function gui__current_gui() {
-  var _a;
-  let gui =
-    (_a = Client === null || Client === void 0 ? void 0 : Client.currentGui) ===
-      null || _a === void 0
-      ? void 0
-      : _a.get();
-  if (gui) {
-    return new Some(gui);
-  }
-  return new None();
+    var _a;
+    let gui = (_a = Client === null || Client === void 0 ? void 0 : Client.currentGui) === null || _a === void 0 ? void 0 : _a.get();
+    if (gui) {
+        return new Some(gui);
+    }
+    return new None();
 }
 function std__from_js_array(arr) {
-  return toList([...arr]);
+    return toList([...arr]);
 }
 function std__is_key_down(keyName) {
-  return Keyboard.isKeyDown(Keyboard[keyName]);
+    return Keyboard.isKeyDown(Keyboard[keyName]);
 }
 function std__to_js_array(arr) {
-  return arr.toArray();
+    return arr.toArray();
 }
 
 function to_item_stack(item) {
@@ -856,36 +846,45 @@ function from_raw_item_stack(raw_item_stack) {
 }
 
 function clone_item(item) {
-  return then$(to_item_stack(item), (raw_item) => {
-    return then$(copy_item_stack(raw_item), (copy_of_item) => {
-      return then$(from_raw_item_stack(copy_of_item), (item) => {
-        return new Some(item);
-      });
-    });
-  });
+  return then$(
+    to_item_stack(item),
+    (raw_item) => {
+      return then$(
+        copy_item_stack(raw_item),
+        (copy_of_item) => {
+          return then$(
+            from_raw_item_stack(copy_of_item),
+            (item) => { return new Some(item); },
+          );
+        },
+      );
+    },
+  );
 }
 
 function with_name(item, new_name) {
-  return then$(clone_item(item), (cloned_item) => {
-    return then$(
-      reflection__call_method("setName")(cloned_item, [new_name]),
-      (_) => {
-        return new Some(cloned_item);
-      }
-    );
-  });
+  return then$(
+    clone_item(item),
+    (cloned_item) => {
+      return then$(
+        reflection__call_method("setName")(cloned_item, [new_name]),
+        (_) => { return new Some(cloned_item); },
+      );
+    },
+  );
 }
 
 function with_lore(item, new_lore) {
-  return then$(clone_item(item), (cloned_item) => {
-    let lore_as_array = std__to_js_array(new_lore);
-    return then$(
-      reflection__call_method("setLore")(cloned_item, lore_as_array),
-      (_) => {
-        return new Some(cloned_item);
-      }
-    );
-  });
+  return then$(
+    clone_item(item),
+    (cloned_item) => {
+      let lore_as_array = std__to_js_array(new_lore);
+      return then$(
+        reflection__call_method("setLore")(cloned_item, lore_as_array),
+        (_) => { return new Some(cloned_item); },
+      );
+    },
+  );
 }
 
 function item_in_slot(slot) {
@@ -915,7 +914,7 @@ let inventory_creative_tab_ix = 11;
 function start$2() {
   let creative_tab_field_getter = reflection__get_field_value(
     creative_gui,
-    creative_tab_field
+    creative_tab_field,
   );
   return update_loop__make(
     new Initial(),
@@ -923,9 +922,7 @@ function start$2() {
       new CustomKeybind(
         "KEY_R",
         "Copy Item Name & Lore",
-        (state) => {
-          return state;
-        },
+        (state) => { return state; },
         (state, gui) => {
           let item = (() => {
             let _pipe = gui;
@@ -943,58 +940,56 @@ function start$2() {
               (() => {
                 let _pipe = item$1;
                 return item__lore(_pipe);
-              })()
+              })(),
             );
           } else {
             return state;
           }
-        }
+        },
       ),
       new CustomKeybind(
         "KEY_K",
         "Paste Item Name & Lore",
-        (state) => {
-          return state;
-        },
+        (state) => { return state; },
         (state, gui) => {
-          if (state instanceof Initial);
-          else {
+          if (state instanceof Initial) ; else {
             let name = state.name;
             let lore = state.lore;
-            let err = (log) => {
-              return () => {
-                return std__log(log);
-              };
-            };
+            let err = (log) => { return () => { return std__log(log); }; };
             lazy_guard(
               !gui__is_instance_of(gui, creative_gui),
               err(
-                "You must be in the inventory tab of the creative menu to paste."
+                "You must be in the inventory tab of the creative menu to paste.",
               ),
               () => {
                 let is_on_inventory_tab = (() => {
                   let _pipe = creative_tab_field_getter(new Some(gui));
-                  let _pipe$1 = map$2(_pipe, (creative_tab) => {
-                    return creative_tab === inventory_creative_tab_ix;
-                  });
+                  let _pipe$1 = map$2(
+                    _pipe,
+                    (creative_tab) => {
+                      return creative_tab === inventory_creative_tab_ix;
+                    },
+                  );
                   return unwrap$1(_pipe$1, false);
                 })();
                 return lazy_guard(
                   !is_on_inventory_tab,
                   err(
-                    "You must be in the inventory tab of the creative menu to paste."
+                    "You must be in the inventory tab of the creative menu to paste.",
                   ),
                   () => {
                     let item = (() => {
                       let _pipe = gui;
                       let _pipe$1 = gui__slot_under_mouse(_pipe);
                       let _pipe$2 = then$(_pipe$1, item_in_slot);
-                      let _pipe$3 = then$(_pipe$2, (_capture) => {
-                        return with_name(_capture, name);
-                      });
-                      return then$(_pipe$3, (_capture) => {
-                        return with_lore(_capture, lore);
-                      });
+                      let _pipe$3 = then$(
+                        _pipe$2,
+                        (_capture) => { return with_name(_capture, name); },
+                      );
+                      return then$(
+                        _pipe$3,
+                        (_capture) => { return with_lore(_capture, lore); },
+                      );
                     })();
                     let slot = (() => {
                       let _pipe = gui;
@@ -1009,16 +1004,16 @@ function start$2() {
                     } else {
                       return std__log("Failed to paste onto hovered item");
                     }
-                  }
+                  },
                 );
-              }
+              },
             );
           }
           return state;
-        }
+        },
       ),
     ]),
-    toList([])
+    toList([]),
   );
 }
 
@@ -1316,6 +1311,7 @@ function split$2(iodata, pattern) {
  * This file uses jsdoc to annotate types.
  * These types can be checked using the typescript compiler with "checkjs" option.
  */
+
 
 let referenceMap = new WeakMap();
 let tempDataView = new DataView(new ArrayBuffer(8));
@@ -2323,14 +2319,14 @@ function inspect$1(v) {
   if (v instanceof Function) {
     let args = [];
     {
-      let iter_5 = Array(v.length).keys()[Symbol.iterator]();
-      let next_5 = iter_5.next();
-      while (!next_5.done) {
-        let i = next_5.value;
-        rgs.push(String.fromCharCode(i + 97));
-        next_5 = iter_5.next();
-      }
-    }
+                let iter_10 = (Array(v.length).keys())[Symbol.iterator]();
+                let next_10 = iter_10.next();
+                while (!next_10.done) {
+                  let i = next_10.value;
+                  rgs.push(String.fromCharCode(i + 97))
+                  ;next_10 = iter_10.next();
+                }
+              }
     return `//fn(${args.join(", ")}) { ... }`;
   }
   return inspectObject(v);
@@ -2351,15 +2347,15 @@ function inspectObject(v) {
   let name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
   let props = [];
   {
-    let iter_6 = Object.keys(v)[Symbol.iterator]();
-    let next_6 = iter_6.next();
-    while (!next_6.done) {
-      let k = next_6.value;
-
-      props.push(`${inspect$1(k)}: ${inspect$1(v[k])}`);
-      next_6 = iter_6.next();
-    }
-  }
+                let iter_11 = (Object.keys(v))[Symbol.iterator]();
+                let next_11 = iter_11.next();
+                while (!next_11.done) {
+                  let k = next_11.value;
+                  
+  props.push(`${inspect$1(k)}: ${inspect$1(v[k])}`);
+next_11 = iter_11.next();
+                }
+              }
   let body = props.length ? " " + props.join(", ") + " " : "";
   let head = name === "Object" ? "" : name + " ";
   return `//js(${head}{${body}})`;
@@ -2494,9 +2490,7 @@ function fold(iterator, initial, f) {
 }
 
 function run(iterator) {
-  return fold(iterator, undefined, (_, _1) => {
-    return undefined;
-  });
+  return fold(iterator, undefined, (_, _1) => { return undefined; });
 }
 
 function do_map(continuation, f) {
@@ -2531,9 +2525,7 @@ function do_filter_map(loop$continuation, loop$f) {
       let $1 = f(e);
       if ($1.isOk()) {
         let e$1 = $1[0];
-        return new Continue(e$1, () => {
-          return do_filter_map(next, f);
-        });
+        return new Continue(e$1, () => { return do_filter_map(next, f); });
       } else {
         loop$continuation = next;
         loop$f = f;
@@ -2543,43 +2535,43 @@ function do_filter_map(loop$continuation, loop$f) {
 }
 
 function filter_map(iterator, f) {
-  let _pipe = () => {
-    return do_filter_map(iterator.continuation, f);
-  };
+  let _pipe = () => { return do_filter_map(iterator.continuation, f); };
   return new Iterator(_pipe);
 }
 
 function once(f) {
-  let _pipe = () => {
-    return new Continue(f(), stop);
-  };
+  let _pipe = () => { return new Continue(f(), stop); };
   return new Iterator(_pipe);
 }
 
 function range(start, stop) {
   let $ = compare();
   if ($ instanceof Eq) {
-    return once(() => {
-      return start;
-    });
+    return once(() => { return start; });
   } else if ($ instanceof Gt) {
-    return unfold(start, (current) => {
-      let $1 = current < stop;
-      if (!$1) {
-        return new Next(current, current - 1);
-      } else {
-        return new Done();
-      }
-    });
+    return unfold(
+      start,
+      (current) => {
+        let $1 = current < stop;
+        if (!$1) {
+          return new Next(current, current - 1);
+        } else {
+          return new Done();
+        }
+      },
+    );
   } else {
-    return unfold(start, (current) => {
-      let $1 = current > stop;
-      if (!$1) {
-        return new Next(current, current + 1);
-      } else {
-        return new Done();
-      }
-    });
+    return unfold(
+      start,
+      (current) => {
+        let $1 = current > stop;
+        if (!$1) {
+          return new Next(current, current + 1);
+        } else {
+          return new Done();
+        }
+      },
+    );
   }
 }
 
@@ -2626,7 +2618,7 @@ function inspect(term) {
 function internal_get_from_give_code(input) {
   return reflection__get_static_method(
     "fr.atesab.act.utils.ItemUtils",
-    "getFromGiveCode"
+    "getFromGiveCode",
   )([input]);
 }
 
@@ -2653,138 +2645,142 @@ class NotActive extends CustomType {}
 
 function start$1() {
   let file_contents = std__read_file(
-    "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_items_output.txt"
+    "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_items_output.txt",
   );
   let items = (() => {
     let _pipe = file_contents;
     let _pipe$1 = split(_pipe, "\n");
     let _pipe$2 = map$1(_pipe$1, get_item_from_give_code);
-    let _pipe$3 = filter_map$1(_pipe$2, (a) => {
-      return to_result(a, undefined);
-    });
+    let _pipe$3 = filter_map$1(
+      _pipe$2,
+      (a) => { return to_result(a, undefined); },
+    );
     let _pipe$4 = sized_chunk(_pipe$3, 8);
-    let _pipe$5 = index_map(_pipe$4, (a, i) => {
-      return [
-        i,
-        index_map(a, (b, j) => {
-          return [b, j];
-        }),
-      ];
-    });
+    let _pipe$5 = index_map(
+      _pipe$4,
+      (a, i) => { return [i, index_map(a, (b, j) => { return [b, j]; })]; },
+    );
     return from_list(_pipe$5);
   })();
   return update_loop__make(
     new NotActive(),
     toList([
-      new CustomCommand("toggleitemgiver", (state) => {
-        let has_items_in_hotbar =
-          (() => {
+      new CustomCommand(
+        "toggleitemgiver",
+        (state) => {
+          let has_items_in_hotbar = (() => {
             let _pipe = range(0, 0 + 7);
             let _pipe$1 = map(_pipe, player__get_item_in_slot);
-            let _pipe$2 = filter_map(_pipe$1, (a) => {
-              return to_result(a, undefined);
-            });
+            let _pipe$2 = filter_map(
+              _pipe$1,
+              (a) => { return to_result(a, undefined); },
+            );
             return length(_pipe$2);
           })() > 0;
-        if (state instanceof NotActive && has_items_in_hotbar) {
-          std__log("Item giver &anow active&f! Starting at page 1.");
-          return new ShouldUpdate(0);
-        } else if (state instanceof NotActive && !has_items_in_hotbar) {
-          std__log("Try again with an &cempty&f hotbar.");
-          return new NotActive();
-        } else {
-          std__log("Item giver &cno longer active&f!");
-          let _pipe = range(0, 0 + 7);
-          each(_pipe, player__clear_slot);
-          return new NotActive();
-        }
-      }),
-      new ScrollUp((state) => {
-        if (state instanceof NotActive) {
-          return new NotActive();
-        } else if (state instanceof IsUpdated) {
-          let i = state.i;
-          let slot = max(i - 1, 0);
-          return new ShouldUpdate(slot);
-        } else {
-          let i = state.i;
-          let slot = max(i - 1, 0);
-          return new ShouldUpdate(slot);
-        }
-      }),
-      new ScrollDown((state) => {
-        if (state instanceof IsUpdated) {
-          let i = state.i;
-          let slot = min(i + 1, map_size(items) - 1);
-          return new ShouldUpdate(slot);
-        } else if (state instanceof ShouldUpdate) {
-          let i = state.i;
-          let slot = min(i + 1, map_size(items) - 1);
-          return new ShouldUpdate(slot);
-        } else {
-          return new NotActive();
-        }
-      }),
-      new Tick((state) => {
-        if (state instanceof IsUpdated) {
-          return state;
-        } else if (state instanceof NotActive) {
-          return state;
-        } else {
-          let i = state.i;
-          let $ = get(items, i);
-          if ($.isOk()) {
-            let items$1 = $[0];
-            each$1(items$1, (item) => {
-              return player__set_hotbar_slot_to_item(
-                item[0],
-                remainderInt(item[1], 8)
-              );
-            });
-            return new IsUpdated(i);
+          if (state instanceof NotActive && has_items_in_hotbar) {
+            std__log("Item giver &anow active&f! Starting at page 1.");
+            return new ShouldUpdate(0);
+          } else if (state instanceof NotActive && !has_items_in_hotbar) {
+            std__log("Try again with an &cempty&f hotbar.");
+            return new NotActive();
           } else {
-            throw makeError(
-              "panic",
-              "modules/itemgiver",
-              91,
-              "",
-              "panic expression evaluated"
-            );
+            std__log("Item giver &cno longer active&f!");
+            let _pipe = range(0, 0 + 7);
+            each(_pipe, player__clear_slot);
+            return new NotActive();
           }
-        }
-      }),
+        },
+      ),
+      new ScrollUp(
+        (state) => {
+          if (state instanceof NotActive) {
+            return new NotActive();
+          } else if (state instanceof IsUpdated) {
+            let i = state.i;
+            let slot = max(i - 1, 0);
+            return new ShouldUpdate(slot);
+          } else {
+            let i = state.i;
+            let slot = max(i - 1, 0);
+            return new ShouldUpdate(slot);
+          }
+        },
+      ),
+      new ScrollDown(
+        (state) => {
+          if (state instanceof IsUpdated) {
+            let i = state.i;
+            let slot = min(i + 1, map_size(items) - 1);
+            return new ShouldUpdate(slot);
+          } else if (state instanceof ShouldUpdate) {
+            let i = state.i;
+            let slot = min(i + 1, map_size(items) - 1);
+            return new ShouldUpdate(slot);
+          } else {
+            return new NotActive();
+          }
+        },
+      ),
+      new Tick(
+        (state) => {
+          if (state instanceof IsUpdated) {
+            return state;
+          } else if (state instanceof NotActive) {
+            return state;
+          } else {
+            let i = state.i;
+            let $ = get(items, i);
+            if ($.isOk()) {
+              let items$1 = $[0];
+              each$1(
+                items$1,
+                (item) => {
+                  return player__set_hotbar_slot_to_item(
+                    item[0],
+                    remainderInt(item[1], 8),
+                  );
+                },
+              );
+              return new IsUpdated(i);
+            } else {
+              throw makeError(
+                "panic",
+                "modules/itemgiver",
+                91,
+                "",
+                "panic expression evaluated")
+            }
+          }
+        },
+      ),
     ]),
     toList([
-      new HotbarRender((key, state) => {
-        if (state instanceof NotActive) {
-          return undefined;
-        } else if (state instanceof ShouldUpdate) {
-          let i = state.i;
-          let _pipe = key;
-          return render__render_string(
-            _pipe,
-            100,
-            100,
-            "page: &b" +
-              to_string$2(i + 1) +
-              " &f/ &c" +
-              to_string$2(map_size(items))
-          );
-        } else {
-          let i = state.i;
-          let _pipe = key;
-          return render__render_string(
-            _pipe,
-            100,
-            100,
-            "page: &b" +
-              to_string$2(i + 1) +
-              " &f/ &c" +
-              to_string$2(map_size(items))
-          );
-        }
-      }),
-    ])
+      new HotbarRender(
+        (key, state) => {
+          if (state instanceof NotActive) {
+            return undefined;
+          } else if (state instanceof ShouldUpdate) {
+            let i = state.i;
+            let _pipe = key;
+            return render__render_string(
+              _pipe,
+              100,
+              100,
+              (("page: &b" + to_string$2(i + 1)) + " &f/ &c") + to_string$2(map_size(items)),
+            );
+          } else {
+            let i = state.i;
+            let _pipe = key;
+            return render__render_string(
+              _pipe,
+              100,
+              100,
+              (("page: &b" + to_string$2(i + 1)) + " &f/ &c") + to_string$2(map_size(items)),
+            );
+          }
+        },
+      ),
+    ]),
   );
 }
 
@@ -2798,15 +2794,17 @@ function then_or(item, callback, or) {
 }
 
 function panic_unwrap_o(x) {
-  return lazy_unwrap(x, () => {
-    throw makeError(
-      "panic",
-      "ct/stdext",
-      101,
-      "",
-      "panic expression evaluated"
-    );
-  });
+  return lazy_unwrap(
+    x,
+    () => {
+      throw makeError(
+        "panic",
+        "ct/stdext",
+        101,
+        "",
+        "panic expression evaluated")
+    },
+  );
 }
 
 class NoText extends CustomType {}
@@ -2819,10 +2817,7 @@ class ItemText extends CustomType {
 }
 
 function enable_repeat_events(bool) {
-  return reflection__get_static_method(
-    "Keyboard",
-    "enableRepeatEvents"
-  )([bool]);
+  return reflection__get_static_method("Keyboard", "enableRepeatEvents")([bool]);
 }
 
 function unwrap(result) {
@@ -2831,7 +2826,12 @@ function unwrap(result) {
     return a_value;
   } else {
     let err = result[0];
-    throw makeError("panic", "modules/textpreview", 43, "unwrap", inspect(err));
+    throw makeError(
+      "panic",
+      "modules/textpreview",
+      43,
+      "unwrap",
+      inspect(err))
   }
 }
 
@@ -2845,8 +2845,7 @@ function in_name_editor(gui) {
   return gui__is_instance_of(gui, name_editor_class_name);
 }
 
-let lore_editor_class_name =
-  "fr.atesab.act.gui.modifier.GuiStringArrayModifier";
+let lore_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringArrayModifier";
 
 function in_lore_editor(gui) {
   return gui__is_instance_of(gui, lore_editor_class_name);
@@ -2858,15 +2857,18 @@ function get_text_fields(gui) {
   let _pipe = reflection__get_priv_value("tfs")(gui);
   let _pipe$1 = unwrap(_pipe);
   let _pipe$2 = std__from_js_array(_pipe$1);
-  return index_map(_pipe$2, (x, i) => {
-    return [
-      (() => {
-        let _pipe$3 = reflection__field(is_focused_field_name)(x);
-        return unwrap(_pipe$3);
-      })(),
-      i,
-    ];
-  });
+  return index_map(
+    _pipe$2,
+    (x, i) => {
+      return [
+        (() => {
+          let _pipe$3 = reflection__field(is_focused_field_name)(x);
+          return unwrap(_pipe$3);
+        })(),
+        i,
+      ];
+    },
+  );
 }
 
 function start() {
@@ -2876,330 +2878,362 @@ function start() {
       new CustomKeybind(
         "KEY_RETURN",
         "Add a new line to the lore editors",
-        (state) => {
-          return state;
-        },
+        (state) => { return state; },
         (state, gui) => {
-          return guard(!in_lore_editor(gui) || !is_ctrl_down(), state, () => {
-            let text_fields = get_text_fields(gui);
-            let focused_text_field = find_map(
-              text_fields,
-              (text_field_with_i) => {
-                let text_field = text_field_with_i[0];
-                let i = text_field_with_i[1];
-                let is_focused = text_field.get();
-                return guard(!is_focused, new Error(undefined), () => {
-                  text_field.set(false);
-                  return new Ok(i);
-                });
-              }
-            );
-            return then_or(
-              focused_text_field,
-              (focused_text_field_ix) => {
-                let f = (() => {
-                  let _pipe = reflection__field("values")(gui);
-                  return unwrap(_pipe);
-                })();
-                let values = (() => {
-                  let _pipe = f.get();
-                  let _pipe$1 = std__from_js_array(_pipe);
-                  return std__to_js_array(_pipe$1);
-                })();
-                reflection__call_method("splice")(values, [
-                  focused_text_field_ix + 1,
-                  0,
-                  "",
-                ]);
-                let list_as_array_list = (() => {
-                  let _pipe = reflection__new_instance("ArrayList")([values]);
-                  return panic_unwrap_o(_pipe);
-                })();
-                f.set(list_as_array_list);
-                reflection__call_priv_method("defineMenu")(gui, []);
-                let is_focused = (() => {
-                  let _pipe = get_text_fields(gui);
-                  let _pipe$1 = at(_pipe, focused_text_field_ix + 1);
-                  return unwrap(_pipe$1);
-                })();
-                is_focused[0].set(true);
-                return state;
-              },
-              state
-            );
-          });
-        }
+          return guard(
+            !in_lore_editor(gui) || !is_ctrl_down(),
+            state,
+            () => {
+              let text_fields = get_text_fields(gui);
+              let focused_text_field = find_map(
+                text_fields,
+                (text_field_with_i) => {
+                  let text_field = text_field_with_i[0];
+                  let i = text_field_with_i[1];
+                  let is_focused = text_field.get();
+                  return guard(
+                    !is_focused,
+                    new Error(undefined),
+                    () => {
+                      text_field.set(false);
+                      return new Ok(i);
+                    },
+                  );
+                },
+              );
+              return then_or(
+                focused_text_field,
+                (focused_text_field_ix) => {
+                  let f = (() => {
+                    let _pipe = reflection__field("values")(gui);
+                    return unwrap(_pipe);
+                  })();
+                  let values = (() => {
+                    let _pipe = f.get();
+                    let _pipe$1 = std__from_js_array(_pipe);
+                    return std__to_js_array(_pipe$1);
+                  })();
+                  reflection__call_method("splice")(
+                    values,
+                    [focused_text_field_ix + 1, 0, ""],
+                  );
+                  let list_as_array_list = (() => {
+                    let _pipe = reflection__new_instance("ArrayList")([values]);
+                    return panic_unwrap_o(_pipe);
+                  })();
+                  f.set(list_as_array_list);
+                  reflection__call_priv_method("defineMenu")(gui, []);
+                  let is_focused = (() => {
+                    let _pipe = get_text_fields(gui);
+                    let _pipe$1 = at(_pipe, focused_text_field_ix + 1);
+                    return unwrap(_pipe$1);
+                  })();
+                  is_focused[0].set(true);
+                  return state;
+                },
+                state,
+              );
+            },
+          );
+        },
       ),
       new CustomKeybind(
         "KEY_TAB",
         "Go forward or backward on line of lore editor",
-        (state) => {
-          return state;
-        },
+        (state) => { return state; },
         (state, gui) => {
-          return guard(!in_lore_editor(gui), state, () => {
-            let text_fields = get_text_fields(gui);
-            let focused_text_field = find_map(
-              text_fields,
-              (text_field_with_i) => {
-                let text_field = text_field_with_i[0];
-                let i = text_field_with_i[1];
-                let is_focused = text_field.get();
-                return guard(!is_focused, new Error(undefined), () => {
-                  text_field.set(false);
-                  return new Ok(i);
-                });
-              }
-            );
-            return then_or(
-              focused_text_field,
-              (focused_text_field) => {
-                let is_shift_down$1 =
-                  std__is_key_down("KEY_LSHIFT") ||
-                  std__is_key_down("KEY_RSHIFT");
-                let focus_this_ix = (() => {
-                  if (!is_shift_down$1) {
-                    return focused_text_field + 1;
-                  } else {
-                    return focused_text_field - 1;
-                  }
-                })();
-                return then_or(
-                  (() => {
-                    let _pipe = length$1(text_fields);
-                    return ((_capture) => {
-                      return modulo(focus_this_ix, _capture);
-                    })(_pipe);
-                  })(),
-                  (text_field_to_focus_ix) => {
-                    return then_or(
-                      (() => {
-                        let _pipe = text_fields;
-                        return at(_pipe, text_field_to_focus_ix);
-                      })(),
-                      (text_field) => {
-                        text_field[0].set(true);
-                        return state;
-                      },
-                      state
-                    );
-                  },
-                  state
-                );
-              },
-              state
-            );
-          });
-        }
+          return guard(
+            !in_lore_editor(gui),
+            state,
+            () => {
+              let text_fields = get_text_fields(gui);
+              let focused_text_field = find_map(
+                text_fields,
+                (text_field_with_i) => {
+                  let text_field = text_field_with_i[0];
+                  let i = text_field_with_i[1];
+                  let is_focused = text_field.get();
+                  return guard(
+                    !is_focused,
+                    new Error(undefined),
+                    () => {
+                      text_field.set(false);
+                      return new Ok(i);
+                    },
+                  );
+                },
+              );
+              return then_or(
+                focused_text_field,
+                (focused_text_field) => {
+                  let is_shift_down$1 = std__is_key_down("KEY_LSHIFT") || std__is_key_down(
+                    "KEY_RSHIFT",
+                  );
+                  let focus_this_ix = (() => {
+                    if (!is_shift_down$1) {
+                      return focused_text_field + 1;
+                    } else {
+                      return focused_text_field - 1;
+                    }
+                  })();
+                  return then_or(
+                    (() => {
+                      let _pipe = length$1(text_fields);
+                      return ((_capture) => {
+                        return modulo(focus_this_ix, _capture);
+                      })(_pipe);
+                    })(),
+                    (text_field_to_focus_ix) => {
+                      return then_or(
+                        (() => {
+                          let _pipe = text_fields;
+                          return at(_pipe, text_field_to_focus_ix);
+                        })(),
+                        (text_field) => {
+                          text_field[0].set(true);
+                          return state;
+                        },
+                        state,
+                      );
+                    },
+                    state,
+                  );
+                },
+                state,
+              );
+            },
+          );
+        },
       ),
-      new GuiOpened((state, gui) => {
-        let $ = (() => {
-          let $1 = in_name_editor(gui);
-          let $2 = in_lore_editor(gui);
-          if ($1) {
-            return enable_repeat_events(true);
-          } else if ($2) {
-            return enable_repeat_events(true);
-          } else {
-            return new None();
-          }
-        })();
-        if (!($ instanceof None)) {
-          throw makeError(
-            "assignment_no_match",
-            "modules/textpreview",
-            177,
-            "",
-            "Assignment pattern did not match"
-          );
-        }
-        return state;
-      }),
-      new GuiClosed((state) => {
-        let $ = gui__current_gui();
-        if (!($ instanceof Some)) {
-          throw makeError(
-            "assignment_no_match",
-            "modules/textpreview",
-            184,
-            "",
-            "Assignment pattern did not match"
-          );
-        }
-        let gui = $[0];
-        let $1 = (() => {
-          let $2 = in_name_editor(gui);
-          let $3 = in_lore_editor(gui);
-          if ($2) {
-            return enable_repeat_events(true);
-          } else if ($3) {
-            return enable_repeat_events(true);
-          } else {
-            return new None();
-          }
-        })();
-        if (!($1 instanceof None)) {
-          throw makeError(
-            "assignment_no_match",
-            "modules/textpreview",
-            185,
-            "",
-            "Assignment pattern did not match"
-          );
-        }
-        return state;
-      }),
-      new Tick((state) => {
-        let gui = gui__current_gui();
-        return ((x) => {
-          if (gui instanceof Some) {
-            let gui$1 = gui[0];
-            return x(gui$1);
-          } else {
-            return state;
-          }
-        })((gui) => {
-          let lines_to_render = (() => {
-            let $ = in_name_editor(gui);
-            let $1 = in_lore_editor(gui);
+      new GuiOpened(
+        (state, gui) => {
+          let $ = (() => {
+            let $1 = in_name_editor(gui);
+            let $2 = in_lore_editor(gui);
             if ($1) {
-              return then$(reflection__classof(gui), (gui_class) => {
-                let lore_lines = (() => {
-                  let _pipe = reflection__get_private_field_value(
-                    gui_class,
-                    "values"
-                  )(new Some(gui));
-                  let _pipe$1 = lazy_unwrap(_pipe, () => {
-                    throw makeError(
-                      "panic",
-                      "modules/textpreview",
-                      213,
-                      "",
-                      "panic expression evaluated"
-                    );
-                  });
-                  let _pipe$2 = std__from_js_array(_pipe$1);
-                  return map$1(_pipe$2, std__add_color);
-                })();
-                return then$(
-                  reflection__call_method("getParent")(gui, []),
-                  (parent) => {
-                    return then$(reflection__classof(parent), (parentclass) => {
-                      let item = reflection__get_private_field_value(
-                        parentclass,
-                        "currentItemStack"
-                      )(new Some(parent));
-                      return then$(item, (raw_item) => {
-                        let item$1 = item__from_raw_item(raw_item);
-                        return new Some(
-                          prepend(
-                            (() => {
-                              let _pipe = item$1;
-                              return item__name(_pipe);
-                            })(),
-                            lore_lines
-                          )
-                        );
-                      });
-                    });
-                  }
-                );
-              });
-            } else if ($) {
-              return then$(reflection__classof(gui), (gui_class) => {
-                return then$(
-                  reflection__get_private_field_value(
-                    gui_class,
-                    "field"
-                  )(new Some(gui)),
-                  (text_field) => {
-                    return then$(
-                      reflection__classof(text_field),
-                      (text_field_class) => {
-                        return then$(
-                          reflection__get_private_field_value(
-                            text_field_class,
-                            "field_146216_j"
-                          )(new Some(text_field)),
-                          (text_field_value) => {
-                            let text_field_value$1 =
-                              std__add_color(text_field_value);
-                            return then$(
-                              reflection__call_method("getParent")(gui, []),
-                              (parent) => {
-                                return then$(
-                                  reflection__classof(parent),
-                                  (parentclass) => {
-                                    let item =
-                                      reflection__get_private_field_value(
-                                        parentclass,
-                                        "currentItemStack"
-                                      )(new Some(parent));
-                                    return then$(item, (raw_item) => {
-                                      let item$1 =
-                                        item__from_raw_item(raw_item);
-                                      return new Some(
-                                        prepend(
-                                          text_field_value$1,
-                                          (() => {
-                                            let _pipe = item$1;
-                                            return item__lore(_pipe);
-                                          })()
-                                        )
-                                      );
-                                    });
-                                  }
-                                );
-                              }
-                            );
-                          }
-                        );
-                      }
-                    );
-                  }
-                );
-              });
+              return enable_repeat_events(true);
+            } else if ($2) {
+              return enable_repeat_events(true);
             } else {
               return new None();
             }
           })();
-          if (lines_to_render instanceof Some) {
-            let text_to_copy = lines_to_render[0];
-            return new ItemText(text_to_copy);
-          } else {
-            return new NoText();
+          if (!($ instanceof None)) {
+            throw makeError(
+              "assignment_no_match",
+              "modules/textpreview",
+              177,
+              "",
+              "Assignment pattern did not match")
           }
-        });
-      }),
+          return state;
+        },
+      ),
+      new GuiClosed(
+        (state) => {
+          let $ = gui__current_gui();
+          if (!($ instanceof Some)) {
+            throw makeError(
+              "assignment_no_match",
+              "modules/textpreview",
+              184,
+              "",
+              "Assignment pattern did not match")
+          }
+          let gui = $[0];
+          let $1 = (() => {
+            let $2 = in_name_editor(gui);
+            let $3 = in_lore_editor(gui);
+            if ($2) {
+              return enable_repeat_events(true);
+            } else if ($3) {
+              return enable_repeat_events(true);
+            } else {
+              return new None();
+            }
+          })();
+          if (!($1 instanceof None)) {
+            throw makeError(
+              "assignment_no_match",
+              "modules/textpreview",
+              185,
+              "",
+              "Assignment pattern did not match")
+          }
+          return state;
+        },
+      ),
+      new Tick(
+        (state) => {
+          let gui = gui__current_gui();
+          return ((x) => {
+            if (gui instanceof Some) {
+              let gui$1 = gui[0];
+              return x(gui$1);
+            } else {
+              return state;
+            }
+          })(
+            (gui) => {
+              let lines_to_render = (() => {
+                let $ = in_name_editor(gui);
+                let $1 = in_lore_editor(gui);
+                if ($1) {
+                  let gui_class = (() => {
+                    let _pipe = gui;
+                    let _pipe$1 = reflection__classof(_pipe);
+                    return unwrap(_pipe$1);
+                  })();
+                  let lore_lines = (() => {
+                    let _pipe = reflection__get_private_field_value(gui_class, "values")(
+                      new Some(gui),
+                    );
+                    let _pipe$1 = lazy_unwrap(
+                      _pipe,
+                      () => {
+                        throw makeError(
+                          "panic",
+                          "modules/textpreview",
+                          213,
+                          "",
+                          "panic expression evaluated")
+                      },
+                    );
+                    let _pipe$2 = std__from_js_array(_pipe$1);
+                    return map$1(_pipe$2, std__add_color);
+                  })();
+                  return then$(
+                    reflection__call_method("getParent")(gui, []),
+                    (parent) => {
+                      let parentclass = (() => {
+                        let _pipe = parent;
+                        let _pipe$1 = reflection__classof(_pipe);
+                        return unwrap(_pipe$1);
+                      })();
+                      let item = reflection__get_private_field_value(
+                        parentclass,
+                        "currentItemStack",
+                      )(new Some(parent));
+                      return then$(
+                        item,
+                        (raw_item) => {
+                          let item$1 = item__from_raw_item(raw_item);
+                          return new Some(
+                            prepend(
+                              (() => {
+                                let _pipe = item$1;
+                                return item__name(_pipe);
+                              })(),
+                              lore_lines,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                } else if ($) {
+                  let gui_class = (() => {
+                    let _pipe = gui;
+                    let _pipe$1 = reflection__classof(_pipe);
+                    return unwrap(_pipe$1);
+                  })();
+                  return then$(
+                    reflection__get_private_field_value(gui_class, "field")(new Some(gui)),
+                    (text_field) => {
+                      let text_field_class = (() => {
+                        let _pipe = text_field;
+                        let _pipe$1 = reflection__classof(_pipe);
+                        return unwrap(_pipe$1);
+                      })();
+                      return then$(
+                        reflection__get_private_field_value(
+                          text_field_class,
+                          "field_146216_j",
+                        )(new Some(text_field)),
+                        (text_field_value) => {
+                          let text_field_value$1 = std__add_color(
+                            text_field_value,
+                          );
+                          return then$(
+                            reflection__call_method("getParent")(gui, []),
+                            (parent) => {
+                              let parentclass = (() => {
+                                let _pipe = parent;
+                                let _pipe$1 = reflection__classof(_pipe);
+                                return unwrap(_pipe$1);
+                              })();
+                              let item = reflection__get_private_field_value(
+                                parentclass,
+                                "currentItemStack",
+                              )(new Some(parent));
+                              return then$(
+                                item,
+                                (raw_item) => {
+                                  let item$1 = item__from_raw_item(raw_item);
+                                  return new Some(
+                                    prepend(
+                                      text_field_value$1,
+                                      (() => {
+                                        let _pipe = item$1;
+                                        return item__lore(_pipe);
+                                      })(),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                } else {
+                  return new None();
+                }
+              })();
+              if (lines_to_render instanceof Some) {
+                let text_to_copy = lines_to_render[0];
+                return new ItemText(text_to_copy);
+              } else {
+                return new NoText();
+              }
+            },
+          );
+        },
+      ),
     ]),
     toList([
-      new PostGuiRender((key, state, _) => {
-        let _pipe = key;
-        render__scale(_pipe, 1.25, 1.25);
-        (() => {
-          if (state instanceof ItemText) {
-            let lines_to_render = state.text;
-            return reflection__get_static_method(
-              "net.minecraftforge.fml.client.config.GuiUtils",
-              "drawHoveringText"
-            )([
-              std__to_js_array(lines_to_render),
-              0,
-              25,
-              render__get_screen_width(),
-              render__get_screen_height(),
-              -1,
-              render__get_font_renderer(),
-            ]);
-          } else {
-            return new None();
-          }
-        })();
-
-        let _pipe$1 = key;
-        return render__scale(_pipe$1, 1.0, 1.0);
-      }),
-    ])
+      new PostGuiRender(
+        (key, state, _) => {
+          let _pipe = key;
+          render__scale(_pipe, 1.25, 1.25);
+          (() => {
+            if (state instanceof ItemText) {
+              let lines_to_render = state.text;
+              return reflection__get_static_method(
+                "net.minecraftforge.fml.client.config.GuiUtils",
+                "drawHoveringText",
+              )(
+                [
+                  std__to_js_array(lines_to_render),
+                  0,
+                  25,
+                  render__get_screen_width(),
+                  render__get_screen_height(),
+                  -1,
+                  render__get_font_renderer(),
+                ],
+              );
+            } else {
+              return new None();
+            }
+          })();
+          
+          let _pipe$1 = key;
+          return render__scale(_pipe$1, 1.0, 1.0);
+        },
+      ),
+    ]),
   );
 }
 

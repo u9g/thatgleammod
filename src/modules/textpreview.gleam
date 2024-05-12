@@ -206,7 +206,7 @@ pub fn start() {
         {
           // lore editor
           _, True -> {
-            use gui_class <- then(classof(gui))
+            let gui_class = gui |> classof |> unwrap
 
             let lore_lines: List(String) =
               get_private_field_value(gui_class, "values")(Some(gui))
@@ -216,7 +216,7 @@ pub fn start() {
 
             use parent <- then(call_method("getParent")(gui, #()))
 
-            use parentclass <- then(classof(parent))
+            let parentclass = parent |> classof |> unwrap
 
             let item: option.Option(item.RawItem) =
               get_private_field_value(parentclass, "currentItemStack")(Some(
@@ -231,13 +231,13 @@ pub fn start() {
           }
           // name editor
           True, _ -> {
-            use gui_class <- then(classof(gui))
+            let gui_class = gui |> classof |> unwrap
 
             use text_field <- then(
               get_private_field_value(gui_class, "field")(Some(gui)),
             )
 
-            use text_field_class <- then(classof(text_field))
+            let text_field_class = text_field |> classof |> unwrap
 
             use text_field_value <- then(
               get_private_field_value(text_field_class, "field_146216_j")(Some(
@@ -249,7 +249,7 @@ pub fn start() {
 
             use parent <- then(call_method("getParent")(gui, #()))
 
-            use parentclass <- then(classof(parent))
+            let parentclass = parent |> classof |> unwrap
 
             let item: option.Option(item.RawItem) =
               get_private_field_value(parentclass, "currentItemStack")(Some(
