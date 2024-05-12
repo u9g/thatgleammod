@@ -76,6 +76,8 @@ import {
   FailedToGetDeclaredField,
   ThrownError,
   FieldReflection,
+  FailedToFindJavaType,
+  FailedToGetMethod,
 } from "../../build/dev/javascript/examplemod/ct/reflection.mjs";
 
 export function reflection__get_private_field_value(baseClass, fieldName) {
@@ -111,7 +113,14 @@ export function reflection__field(fieldName) {
       field.setAccessible(true);
       return new Ok(
         new FieldReflection(
-          () => field.get(baseObj),
+          () => {
+            let value = field.get(baseObj);
+            if (value) {
+              return new Some(value);
+            } else {
+              return new None();
+            }
+          },
           (newValue) => field.set(baseObj, newValue)
         )
       );
@@ -153,6 +162,33 @@ export function reflection__set_priv_value(fieldName) {
       }
       field.setAccessible(true);
       return new Ok(field.set(baseObj, value));
+    } catch (e) {
+      return new Error(new ThrownError(e.toString()));
+    }
+  };
+}
+
+export function reflection__get_static_method(baseClassStr, methodNameStr) {
+  return (args) => {
+    try {
+      const ty = !classNameStr.includes(".")
+        ? global[classNameStr]
+        : Java.type(classNameStr);
+      if (!ty) {
+        return new Error(FailedToFindJavaType(baseClassStr));
+      }
+
+      let method = ty[methodNameStr];
+      if (!method) {
+        return new Error(new FailedToGetMethod(methodNameStr));
+      }
+
+      const value = ty[methodNameStr](...args);
+      if (!value) {
+        return new Ok(new None());
+      }
+
+      return new Ok(new Some(value));
     } catch (e) {
       return new Error(new ThrownError(e.toString()));
     }
@@ -225,20 +261,6 @@ export function reflection__get_field_value(baseClassStr, methodNameStr) {
       } else {
         return new None();
       }
-    } catch (e) {
-      return new None();
-    }
-  };
-}
-
-export function reflection__get_static_method(baseClassStr, methodNameStr) {
-  return (args) => {
-    try {
-      const value = Java.type(baseClassStr)[methodNameStr](...args);
-      if (!value) {
-        return new None();
-      }
-      return new Some(value);
     } catch (e) {
       return new None();
     }

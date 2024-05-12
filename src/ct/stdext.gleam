@@ -104,3 +104,10 @@ pub fn panic_unwrap_o(x: Option(a)) -> a {
 pub fn panic_unwrap_r(x: Result(a, b)) -> a {
   r_lazy_unwrap(x, fn() { panic })
 }
+
+pub fn deresult(x: Result(a, Nil)) -> Option(a) {
+  case x {
+    Ok(x) -> option.Some(x)
+    Error(_) -> option.None
+  }
+}

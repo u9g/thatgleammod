@@ -22,7 +22,7 @@ type State {
 }
 
 fn enable_repeat_events(bool: Bool) {
-  get_static_method("Keyboard", "enableRepeatEvents")(#(bool))
+  get_static_method("Keyboard", "enableRepeatEvents")(#(bool)) |> unwrap
 }
 
 const name_editor_class_name = "fr.atesab.act.gui.modifier.GuiStringModifier"
@@ -65,6 +65,23 @@ fn get_text_fields(gui: gui.Gui) -> List(#(FieldReflection(Bool, a), Int)) {
   })
 }
 
+fn focused_text_field(
+  text_fields: List(#(FieldReflection(Bool, a), Int)),
+) -> option.Option(Int) {
+  list.find_map(text_fields, with: fn(text_field_with_i) {
+    let #(text_field, i) = text_field_with_i
+
+    let is_focused = text_field.get() |> panic_unwrap_o
+
+    use <- bool.guard(when: !is_focused, return: Error(Nil))
+
+    // SETTING FOUND FIELD TO FALSE
+    text_field.set(False)
+    Ok(i)
+  })
+  |> stdext.deresult
+}
+
 pub fn start() {
   update_loop.make(
     NoText,
@@ -78,36 +95,29 @@ pub fn start() {
           )
 
           let text_fields = get_text_fields(gui)
+          let focused_text_field_ix =
+            focused_text_field(text_fields) |> panic_unwrap_o
 
-          let focused_text_field =
-            list.find_map(text_fields, with: fn(text_field_with_i) {
-              let #(text_field, i) = text_field_with_i
+          let values_field = unwrap(reflection.field("values")(gui))
 
-              let is_focused = text_field.get()
+          let new_lore_lines = {
+            let lore_lines =
+              values_field.get() |> std.from_js_array |> std.to_js_array
 
-              use <- bool.guard(when: !is_focused, return: Error(Nil))
+            call_method("splice")(lore_lines, #(
+              focused_text_field_ix + 1,
+              0,
+              "",
+            ))
 
-              text_field.set(False)
-              Ok(i)
-            })
+            let list_as_array_list =
+              reflection.new_instance("ArrayList")(#(lore_lines))
+              |> panic_unwrap_o
 
-          use focused_text_field_ix <- stdext.then_or(
-            focused_text_field,
-            or: state,
-          )
+            list_as_array_list
+          }
 
-          let f =
-            reflection.field("values")(gui)
-            |> unwrap
-
-          let values = f.get() |> std.from_js_array |> std.to_js_array
-
-          call_method("splice")(values, #(focused_text_field_ix + 1, 0, ""))
-
-          let list_as_array_list =
-            reflection.new_instance("ArrayList")(#(values)) |> panic_unwrap_o
-
-          f.set(list_as_array_list)
+          values_field.set(new_lore_lines)
 
           reflection.call_priv_method("defineMenu")(gui, #())
 
@@ -131,29 +141,15 @@ pub fn start() {
 
           let text_fields = get_text_fields(gui)
 
-          let focused_text_field =
-            list.find_map(text_fields, with: fn(text_field_with_i) {
-              let #(text_field, i) = text_field_with_i
-
-              let is_focused = text_field.get()
-
-              use <- bool.guard(when: !is_focused, return: Error(Nil))
-
-              text_field.set(False)
-              Ok(i)
-            })
-
-          use focused_text_field <- stdext.then_or(
-            focused_text_field,
-            or: state,
-          )
+          let focused_text_field_ix =
+            focused_text_field(text_fields) |> panic_unwrap_o
 
           let is_shift_down =
             is_key_down("KEY_LSHIFT") || is_key_down("KEY_RSHIFT")
 
           let focus_this_ix = case is_shift_down {
-            False -> focused_text_field + 1
-            True -> focused_text_field - 1
+            False -> focused_text_field_ix + 1
+            True -> focused_text_field_ix - 1
           }
 
           use text_field_to_focus_ix <- stdext.then_or(
@@ -291,6 +287,7 @@ pub fn start() {
               -1,
               render.font_renderer(),
             ))
+            |> unwrap
           }
           NoText -> None
         }

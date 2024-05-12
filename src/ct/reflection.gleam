@@ -2,7 +2,9 @@ import gleam/option.{type Option}
 
 pub type ReflectionError {
   FailedToGetBaseClass
+  FailedToFindJavaType(java_type: String)
   FailedToGetDeclaredField(name: String)
+  FailedToGetMethod(name: String)
   ThrownError(error: String)
 }
 
@@ -11,7 +13,7 @@ pub fn get_static_method(
   base_class: String,
   method_name: String,
   // a = tuple of arguments
-) -> fn(a) -> Option(b)
+) -> fn(a) -> Result(Option(b), ReflectionError)
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__get_field_value")
 pub fn get_field_value(
@@ -33,7 +35,7 @@ pub fn get_private_field_value(
 ) -> fn(Option(a)) -> Option(b)
 
 pub type FieldReflection(a, b) {
-  FieldReflection(get: fn() -> a, set: fn(a) -> Nil)
+  FieldReflection(get: fn() -> Option(a), set: fn(a) -> Nil)
 }
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__field")
