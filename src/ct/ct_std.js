@@ -171,9 +171,9 @@ export function reflection__set_priv_value(fieldName) {
 export function reflection__get_static_method(baseClassStr, methodNameStr) {
   return (args) => {
     try {
-      const ty = !classNameStr.includes(".")
-        ? global[classNameStr]
-        : Java.type(classNameStr);
+      const ty = !baseClassStr.includes(".")
+        ? global[baseClassStr]
+        : Java.type(baseClassStr);
       if (!ty) {
         return new Error(FailedToFindJavaType(baseClassStr));
       }
