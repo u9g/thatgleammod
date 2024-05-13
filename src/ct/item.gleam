@@ -20,11 +20,14 @@ pub fn name(item: Item) -> String
 pub fn lore(item: Item) -> List(String)
 
 fn to_item_stack(item: Item) -> Option(RawItemStack) {
-  reflection.call_method("getItemStack")(item, #())
+  reflection.call_method("getItemStack", reflection.PublicCall)(item, #())
 }
 
 fn copy_item_stack(raw_item_stack: RawItemStack) -> Option(RawItemStack) {
-  reflection.call_method("func_77946_l")(raw_item_stack, #())
+  reflection.call_method("func_77946_l", reflection.PublicCall)(
+    raw_item_stack,
+    #(),
+  )
 }
 
 fn from_raw_item_stack(raw_item_stack: RawItemStack) -> Option(Item) {
@@ -42,7 +45,11 @@ fn clone_item(item: Item) -> Option(Item) {
 
 pub fn with_name(item: Item, new_name: String) -> Option(Item) {
   use cloned_item <- then(clone_item(item))
-  use _ <- then(reflection.call_method("setName")(cloned_item, #(new_name)))
+  use _ <- then(
+    reflection.call_method("setName", reflection.PublicCall)(cloned_item, #(
+      new_name,
+    )),
+  )
   option.Some(cloned_item)
 }
 
@@ -50,6 +57,9 @@ pub fn with_lore(item: Item, new_lore: List(String)) -> Option(Item) {
   use cloned_item <- then(clone_item(item))
   let lore_as_array: List(String) = std.to_js_array(new_lore)
   // by passing lore_as_array directly, it's spread
-  use _ <- then(reflection.call_method("setLore")(cloned_item, lore_as_array))
+  use _ <- then(reflection.call_method("setLore", reflection.PublicCall)(
+    cloned_item,
+    lore_as_array,
+  ))
   option.Some(cloned_item)
 }

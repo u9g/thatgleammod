@@ -1,8 +1,8 @@
 import ct/gui.{is_instance_of}
 import ct/item
 import ct/reflection.{
-  type FieldReflection, call_method, classof, get_private_field_value,
-  get_static_method,
+  type FieldReflection, PublicCall, call_method, classof,
+  get_private_field_value, get_static_method,
 }
 import ct/render
 import ct/std.{is_key_down}
@@ -97,7 +97,7 @@ pub fn start() {
             let lore_lines =
               values_field.get() |> std.from_js_array |> std.to_js_array
 
-            call_method("splice")(lore_lines, #(
+            call_method("splice", PublicCall)(lore_lines, #(
               focused_text_field_ix + 1,
               0,
               "",
@@ -112,7 +112,7 @@ pub fn start() {
 
           values_field.set(new_lore_lines)
 
-          reflection.call_priv_method("defineMenu")(gui, #())
+          call_method("defineMenu", reflection.PrivateJavaMethodCall)(gui, #())
 
           let is_focused =
             // re-get text fields after calling defineMenu
@@ -203,7 +203,7 @@ pub fn start() {
               |> std.from_js_array
               |> list.map(std.add_color)
 
-            use parent <- then(call_method("getParent")(gui, #()))
+            use parent <- then(call_method("getParent", PublicCall)(gui, #()))
 
             let parentclass = parent |> classof |> unwrap
 
@@ -236,7 +236,7 @@ pub fn start() {
 
             let text_field_value = std.add_color(text_field_value)
 
-            use parent <- then(call_method("getParent")(gui, #()))
+            use parent <- then(call_method("getParent", PublicCall)(gui, #()))
 
             let parentclass = parent |> classof |> unwrap
 

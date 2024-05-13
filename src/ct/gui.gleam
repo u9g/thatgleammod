@@ -1,5 +1,5 @@
 import ct/item.{type Item}
-import ct/reflection
+import ct/reflection.{PublicCall}
 import gleam/option.{type Option}
 
 pub type Gui
@@ -16,9 +16,9 @@ pub fn slot_under_mouse(gui: Gui) -> Option(Slot)
 pub fn current_gui() -> Option(Gui)
 
 pub fn item_in_slot(slot: Slot) -> Option(Item) {
-  reflection.call_method("getItem")(slot, #())
+  reflection.call_method("getItem", PublicCall)(slot, #())
 }
 
 pub fn number_of_slot(slot: Slot) -> Option(Int) {
-  reflection.call_method("getIndex")(slot, #())
+  reflection.call_method("getIndex", PublicCall)(slot, #())
 }

@@ -78,6 +78,8 @@ import {
   FieldReflection,
   FailedToFindJavaType,
   FailedToGetMethod,
+  PublicCall,
+  PrivateJavaMethodCall,
 } from "../../build/dev/javascript/examplemod/ct/reflection.mjs";
 
 export function reflection__get_private_field_value(baseClass, fieldName) {
@@ -217,28 +219,24 @@ export function reflection__new_instance(classNameStr) {
   };
 }
 
-export function reflection__call_method(methodNameStr) {
+export function reflection__call_method(methodNameStr, callType) {
   return (baseObject, args) => {
     try {
-      const value = baseObject[methodNameStr](...args);
-      if (!value) {
-        return new None();
+      let value;
+      if (callType instanceof PublicCall) {
+        value = baseObject[methodNameStr](...args);
+      } else if (callType instanceof PrivateJavaMethodCall) {
+        const methodHandle = baseObject
+          .getClass()
+          .getDeclaredMethod(methodNameStr);
+        methodHandle.setAccessible(true);
+        value = methodHandle.invoke(baseObject, ...args);
+      } else {
+        throw (
+          "Unexpected call type which doesn't match expected call types: " +
+          callType.toString()
+        );
       }
-      return new Some(value);
-    } catch (e) {
-      return new None();
-    }
-  };
-}
-
-export function reflection__call_priv_method(methodNameStr) {
-  return (baseObject, args) => {
-    try {
-      const methodHandle = baseObject
-        .getClass()
-        .getDeclaredMethod(methodNameStr);
-      methodHandle.setAccessible(true);
-      const value = methodHandle.invoke(baseObject, ...args);
       if (!value) {
         return new None();
       }

@@ -8,6 +8,11 @@ pub type ReflectionError {
   ThrownError(error: String)
 }
 
+pub type CallType {
+  PublicCall
+  PrivateJavaMethodCall
+}
+
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__get_static_method")
 pub fn get_static_method(
   base_class: String,
@@ -57,11 +62,10 @@ pub fn set_priv_value(
 
 // c is a tuple with all arguments to call on the base object a
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__call_method")
-pub fn call_method(method_name: String) -> fn(a, c) -> Option(b)
-
-// c is a tuple with all arguments to call on the base object a
-@external(javascript, "../../../../../src/ct/ct_std.js", "reflection__call_priv_method")
-pub fn call_priv_method(method_name: String) -> fn(a, c) -> Option(b)
+pub fn call_method(
+  method_name: String,
+  call_type: CallType,
+) -> fn(a, c) -> Option(b)
 
 // a is a tuple with all arguments
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__new_instance")

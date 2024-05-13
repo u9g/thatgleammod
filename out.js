@@ -31,14 +31,14 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_8 = this[Symbol.iterator]();
-      let next_8 = iter_8.next();
-      while (!next_8.done) {
-        next_8.value;
+      let iter_0 = this[Symbol.iterator]();
+      let next_0 = iter_0.next();
+      while (!next_0.done) {
+        next_0.value;
 
         if (desired <= 0) return true;
         desired--;
-        next_8 = iter_8.next();
+        next_0 = iter_0.next();
       }
     }
     return desired <= 0;
@@ -47,14 +47,14 @@ class List {
   // @internal
   hasLength(desired) {
     {
-      let iter_9 = this[Symbol.iterator]();
-      let next_9 = iter_9.next();
-      while (!next_9.done) {
-        next_9.value;
+      let iter_1 = this[Symbol.iterator]();
+      let next_1 = iter_1.next();
+      while (!next_1.done) {
+        next_1.value;
 
         if (desired <= 0) return false;
         desired--;
-        next_9 = iter_9.next();
+        next_1 = iter_1.next();
       }
     }
     return desired === 0;
@@ -63,12 +63,12 @@ class List {
   countLength() {
     let length = 0;
     {
-      let iter_10 = this[Symbol.iterator]();
-      let next_10 = iter_10.next();
-      while (!next_10.done) {
-        next_10.value;
+      let iter_2 = this[Symbol.iterator]();
+      let next_2 = iter_2.next();
+      while (!next_2.done) {
+        next_2.value;
         ength++;
-        next_10 = iter_10.next();
+        next_2 = iter_2.next();
       }
     }
     return length;
@@ -233,13 +233,13 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_12 = keys(a)[Symbol.iterator]();
-      let next_12 = iter_12.next();
-      while (!next_12.done) {
-        let k = next_12.value;
+      let iter_4 = keys(a)[Symbol.iterator]();
+      let next_4 = iter_4.next();
+      while (!next_4.done) {
+        let k = next_4.value;
 
         values.push(get(a, k), get(b, k));
-        next_12 = iter_12.next();
+        next_4 = iter_4.next();
       }
     }
   }
@@ -401,6 +401,10 @@ class ThrownError extends CustomType {
   }
 }
 
+class PublicCall extends CustomType {}
+
+class PrivateJavaMethodCall extends CustomType {}
+
 class ScrollUp extends CustomType {
   constructor(handler) {
     super();
@@ -513,10 +517,24 @@ function reflection__new_instance(classNameStr) {
     }
   };
 }
-function reflection__call_method(methodNameStr) {
+function reflection__call_method(methodNameStr, callType) {
   return (baseObject, args) => {
     try {
-      let value = baseObject[methodNameStr](...args);
+      let value;
+      if (callType instanceof PublicCall) {
+        value = baseObject[methodNameStr](...args);
+      } else if (callType instanceof PrivateJavaMethodCall) {
+        let methodHandle = baseObject
+          .getClass()
+          .getDeclaredMethod(methodNameStr);
+        methodHandle.setAccessible(true);
+        value = methodHandle.invoke(baseObject, ...args);
+      } else {
+        throw (
+          "Unexpected call type which doesn't match expected call types: " +
+          callType.toString()
+        );
+      }
       if (!value) {
         return new None();
       }
@@ -602,10 +620,10 @@ register("guiClosed", () => {
 function update_loop__make(init, eventHandlers, displayers) {
   let value = init;
   {
-    let iter_6 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_6 = iter_6.next();
-    while (!next_6.done) {
-      let eventHandler = next_6.value;
+    let iter_5 = eventHandlers.toArray()[Symbol.iterator]();
+    let next_5 = iter_5.next();
+    while (!next_5.done) {
+      let eventHandler = next_5.value;
 
       if (eventHandler instanceof ScrollUp) {
         scrollUp.push(() => {
@@ -647,14 +665,14 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected event handler!!!");
       }
-      next_6 = iter_6.next();
+      next_5 = iter_5.next();
     }
   }
   {
-    let iter_7 = displayers.toArray()[Symbol.iterator]();
-    let next_7 = iter_7.next();
-    while (!next_7.done) {
-      let displayer = next_7.value;
+    let iter_6 = displayers.toArray()[Symbol.iterator]();
+    let next_6 = iter_6.next();
+    while (!next_6.done) {
+      let displayer = next_6.value;
 
       if (displayer instanceof PostGuiRender) {
         postGuiRender.push((gui) => {
@@ -667,7 +685,7 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected displayer!!!");
       }
-      next_7 = iter_7.next();
+      next_6 = iter_6.next();
     }
   }
   // console.log(
@@ -1775,12 +1793,12 @@ function inspect$1(v) {
   if (v instanceof Function) {
     let args = [];
     {
-      let iter_3 = Array(v.length).keys()[Symbol.iterator]();
-      let next_3 = iter_3.next();
-      while (!next_3.done) {
-        let i = next_3.value;
+      let iter_10 = Array(v.length).keys()[Symbol.iterator]();
+      let next_10 = iter_10.next();
+      while (!next_10.done) {
+        let i = next_10.value;
         rgs.push(String.fromCharCode(i + 97));
-        next_3 = iter_3.next();
+        next_10 = iter_10.next();
       }
     }
     return `//fn(${args.join(", ")}) { ... }`;
@@ -1803,13 +1821,13 @@ function inspectObject(v) {
   let name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
   let props = [];
   {
-    let iter_4 = Object.keys(v)[Symbol.iterator]();
-    let next_4 = iter_4.next();
-    while (!next_4.done) {
-      let k = next_4.value;
+    let iter_11 = Object.keys(v)[Symbol.iterator]();
+    let next_11 = iter_11.next();
+    while (!next_11.done) {
+      let k = next_11.value;
 
       props.push(`${inspect$1(k)}: ${inspect$1(v[k])}`);
-      next_4 = iter_4.next();
+      next_11 = iter_11.next();
     }
   }
   let body = props.length ? " " + props.join(", ") + " " : "";
@@ -2247,11 +2265,14 @@ function from_raw_item(raw_item) {
 }
 
 function to_item_stack(item) {
-  return reflection__call_method("getItemStack")(item, []);
+  return reflection__call_method("getItemStack", new PublicCall())(item, []);
 }
 
 function copy_item_stack(raw_item_stack) {
-  return reflection__call_method("func_77946_l")(raw_item_stack, []);
+  return reflection__call_method("func_77946_l", new PublicCall())(
+    raw_item_stack,
+    []
+  );
 }
 
 function from_raw_item_stack(raw_item_stack) {
@@ -2271,7 +2292,9 @@ function clone_item(item) {
 function with_name(item, new_name) {
   return then$(clone_item(item), (cloned_item) => {
     return then$(
-      reflection__call_method("setName")(cloned_item, [new_name]),
+      reflection__call_method("setName", new PublicCall())(cloned_item, [
+        new_name,
+      ]),
       (_) => {
         return new Some(cloned_item);
       }
@@ -2283,7 +2306,10 @@ function with_lore(item, new_lore) {
   return then$(clone_item(item), (cloned_item) => {
     let lore_as_array = std__to_js_array(new_lore);
     return then$(
-      reflection__call_method("setLore")(cloned_item, lore_as_array),
+      reflection__call_method("setLore", new PublicCall())(
+        cloned_item,
+        lore_as_array
+      ),
       (_) => {
         return new Some(cloned_item);
       }
@@ -2292,11 +2318,11 @@ function with_lore(item, new_lore) {
 }
 
 function item_in_slot(slot) {
-  return reflection__call_method("getItem")(slot, []);
+  return reflection__call_method("getItem", new PublicCall())(slot, []);
 }
 
 function number_of_slot(slot) {
-  return reflection__call_method("getIndex")(slot, []);
+  return reflection__call_method("getIndex", new PublicCall())(slot, []);
 }
 
 class Initial extends CustomType {}
