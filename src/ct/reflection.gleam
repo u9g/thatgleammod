@@ -63,6 +63,6 @@ pub fn call_method(method_name: String) -> fn(a, c) -> Option(b)
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__call_priv_method")
 pub fn call_priv_method(method_name: String) -> fn(a, c) -> Option(b)
 
-// c is a tuple with all arguments
+// a is a tuple with all arguments
 @external(javascript, "../../../../../src/ct/ct_std.js", "reflection__new_instance")
-pub fn new_instance(class_name: String) -> fn(c) -> Option(b)
+pub fn new_instance(class_name: String) -> fn(a) -> Result(b, ReflectionError)
