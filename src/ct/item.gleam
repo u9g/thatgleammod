@@ -1,5 +1,6 @@
-import ct/reflection
+import ct/reflection.{type ReflectionError}
 import ct/std
+import ct/stdext.{unwrap}
 import gleam/option.{type Option, then}
 
 pub type Item
@@ -8,8 +9,9 @@ pub type RawItemStack
 
 pub type RawItem
 
-@external(javascript, "../../../../../src/ct/ct_std.js", "item__from_raw_item")
-pub fn from_raw_item(raw_item: RawItem) -> Item
+pub fn from_raw_item(raw_item: RawItem) -> Item {
+  reflection.new_instance("Item")(#(raw_item)) |> unwrap
+}
 
 @external(javascript, "../../../../../src/ct/ct_std.js", "item__name")
 pub fn name(item: Item) -> String
@@ -26,14 +28,16 @@ fn copy_item_stack(raw_item_stack: RawItemStack) -> Option(RawItemStack) {
 }
 
 fn from_raw_item_stack(raw_item_stack: RawItemStack) -> Option(Item) {
-  reflection.new_instance("Item")(#(raw_item_stack))
+  reflection.new_instance("Item")(#(raw_item_stack)) |> unwrap
 }
 
 fn clone_item(item: Item) -> Option(Item) {
-  use raw_item <- then(to_item_stack(item))
-  use copy_of_item <- then(copy_item_stack(raw_item))
-  use item <- then(from_raw_item_stack(copy_of_item))
-  option.Some(item)
+  item
+  |> to_item_stack
+  |> option.map(copy_item_stack)
+  |> option.flatten
+  |> option.map(from_raw_item_stack)
+  |> option.flatten
 }
 
 pub fn with_name(item: Item, new_name: String) -> Option(Item) {

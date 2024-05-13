@@ -199,16 +199,20 @@ export function reflection__new_instance(classNameStr) {
   const ty = !classNameStr.includes(".")
     ? global[classNameStr]
     : Java.type(classNameStr);
+  if (!ty) {
+    return new Error(FailedToFindJavaType(classNameStr));
+  }
 
   return (args) => {
     try {
       const value = new ty(...args);
       if (!value) {
-        return new None();
+        return new Ok(new None());
       }
-      return new Some(value);
+
+      return new Ok(new Some(value));
     } catch (e) {
-      return new None();
+      return new Error(new ThrownError(e.toString()));
     }
   };
 }
@@ -286,10 +290,6 @@ export function player__set_hotbar_slot_to_item(itemToSet, hotbarSlotToFill) {
 
 export function player__clear_slot(hotbarSlotToFill) {
   loadItemstack(36 + hotbarSlotToFill, null);
-}
-
-export function item__from_raw_item(rawItem) {
-  return new Item(rawItem);
 }
 
 export function std__read_file(fromPath) {

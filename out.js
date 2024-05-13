@@ -362,6 +362,15 @@ function map$2(option, fun) {
   }
 }
 
+function flatten(option) {
+  if (option instanceof Some) {
+    let x = option[0];
+    return x;
+  } else {
+    return new None();
+  }
+}
+
 function then$(option, fun) {
   if (option instanceof Some) {
     let x = option[0];
@@ -489,15 +498,18 @@ function reflection__new_instance(classNameStr) {
   let ty = !classNameStr.includes(".")
     ? global[classNameStr]
     : Java.type(classNameStr);
+  if (!ty) {
+    return new Error(FailedToFindJavaType(classNameStr));
+  }
   return (args) => {
     try {
       let value = new ty(...args);
       if (!value) {
-        return new None();
+        return new Ok(new None());
       }
-      return new Some(value);
+      return new Ok(new Some(value));
     } catch (e) {
-      return new None();
+      return new Error(new ThrownError(e.toString()));
     }
   };
 }
@@ -550,9 +562,6 @@ function player__set_hotbar_slot_to_item(itemToSet, hotbarSlotToFill) {
 }
 function player__clear_slot(hotbarSlotToFill) {
   loadItemstack(36 + hotbarSlotToFill, null);
-}
-function item__from_raw_item(rawItem) {
-  return new Item(rawItem);
 }
 function std__read_file(fromPath) {
   return FileLib.read(fromPath);
@@ -713,185 +722,6 @@ function std__to_js_array(arr) {
   return arr.toArray();
 }
 
-function to_item_stack(item) {
-  return reflection__call_method("getItemStack")(item, []);
-}
-
-function copy_item_stack(raw_item_stack) {
-  return reflection__call_method("func_77946_l")(raw_item_stack, []);
-}
-
-function from_raw_item_stack(raw_item_stack) {
-  return reflection__new_instance("Item")([raw_item_stack]);
-}
-
-function clone_item(item) {
-  return then$(to_item_stack(item), (raw_item) => {
-    return then$(copy_item_stack(raw_item), (copy_of_item) => {
-      return then$(from_raw_item_stack(copy_of_item), (item) => {
-        return new Some(item);
-      });
-    });
-  });
-}
-
-function with_name(item, new_name) {
-  return then$(clone_item(item), (cloned_item) => {
-    return then$(
-      reflection__call_method("setName")(cloned_item, [new_name]),
-      (_) => {
-        return new Some(cloned_item);
-      }
-    );
-  });
-}
-
-function with_lore(item, new_lore) {
-  return then$(clone_item(item), (cloned_item) => {
-    let lore_as_array = std__to_js_array(new_lore);
-    return then$(
-      reflection__call_method("setLore")(cloned_item, lore_as_array),
-      (_) => {
-        return new Some(cloned_item);
-      }
-    );
-  });
-}
-
-function item_in_slot(slot) {
-  return reflection__call_method("getItem")(slot, []);
-}
-
-function number_of_slot(slot) {
-  return reflection__call_method("getIndex")(slot, []);
-}
-
-class Initial extends CustomType {}
-
-class Copied extends CustomType {
-  constructor(name, lore) {
-    super();
-    this.name = name;
-    this.lore = lore;
-  }
-}
-
-let creative_gui = "net.minecraft.client.gui.inventory.GuiContainerCreative";
-
-let creative_tab_field = "field_147058_w";
-
-let inventory_creative_tab_ix = 11;
-
-function start$1() {
-  let creative_tab_field_getter = reflection__get_field_value(
-    creative_gui,
-    creative_tab_field
-  );
-  return update_loop__make(
-    new Initial(),
-    toList([
-      new CustomKeybind(
-        "KEY_R",
-        "Copy Item Name & Lore",
-        (state) => {
-          return state;
-        },
-        (state, gui) => {
-          let item = (() => {
-            let _pipe = gui;
-            let _pipe$1 = gui__slot_under_mouse(_pipe);
-            return then$(_pipe$1, item_in_slot);
-          })();
-          if (item instanceof Some) {
-            let item$1 = item[0];
-            std__log("Copied item hovered.");
-            return new Copied(
-              (() => {
-                let _pipe = item$1;
-                return item__name(_pipe);
-              })(),
-              (() => {
-                let _pipe = item$1;
-                return item__lore(_pipe);
-              })()
-            );
-          } else {
-            return state;
-          }
-        }
-      ),
-      new CustomKeybind(
-        "KEY_K",
-        "Paste Item Name & Lore",
-        (state) => {
-          return state;
-        },
-        (state, gui) => {
-          if (state instanceof Initial);
-          else {
-            let name = state.name;
-            let lore = state.lore;
-            let err = (log) => {
-              return () => {
-                return std__log(log);
-              };
-            };
-            lazy_guard(
-              !gui__is_instance_of(gui, creative_gui),
-              err(
-                "You must be in the inventory tab of the creative menu to paste."
-              ),
-              () => {
-                let is_on_inventory_tab = (() => {
-                  let _pipe = creative_tab_field_getter(new Some(gui));
-                  let _pipe$1 = map$2(_pipe, (creative_tab) => {
-                    return creative_tab === inventory_creative_tab_ix;
-                  });
-                  return unwrap$1(_pipe$1, false);
-                })();
-                return lazy_guard(
-                  !is_on_inventory_tab,
-                  err(
-                    "You must be in the inventory tab of the creative menu to paste."
-                  ),
-                  () => {
-                    let item = (() => {
-                      let _pipe = gui;
-                      let _pipe$1 = gui__slot_under_mouse(_pipe);
-                      let _pipe$2 = then$(_pipe$1, item_in_slot);
-                      let _pipe$3 = then$(_pipe$2, (_capture) => {
-                        return with_name(_capture, name);
-                      });
-                      return then$(_pipe$3, (_capture) => {
-                        return with_lore(_capture, lore);
-                      });
-                    })();
-                    let slot = (() => {
-                      let _pipe = gui;
-                      let _pipe$1 = gui__slot_under_mouse(_pipe);
-                      return then$(_pipe$1, number_of_slot);
-                    })();
-                    if (item instanceof Some && slot instanceof Some) {
-                      let item$1 = item[0];
-                      let slot$1 = slot[0];
-                      player__set_hotbar_slot_to_item(item$1, slot$1 - 36);
-                      return std__log("Pasted onto hovered item");
-                    } else {
-                      return std__log("Failed to paste onto hovered item");
-                    }
-                  }
-                );
-              }
-            );
-          }
-          return state;
-        }
-      ),
-    ]),
-    toList([])
-  );
-}
-
 function to_string$2(x) {
   return to_string(x);
 }
@@ -920,162 +750,6 @@ function max(a, b) {
   } else {
     return b;
   }
-}
-
-function do_reverse(loop$remaining, loop$accumulator) {
-  while (true) {
-    let remaining = loop$remaining;
-    let accumulator = loop$accumulator;
-    if (remaining.hasLength(0)) {
-      return accumulator;
-    } else {
-      let item = remaining.head;
-      let rest$1 = remaining.tail;
-      loop$remaining = rest$1;
-      loop$accumulator = prepend(item, accumulator);
-    }
-  }
-}
-
-function reverse(xs) {
-  return do_reverse(xs, toList([]));
-}
-
-function do_filter_map$1(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list.head;
-      let xs = list.tail;
-      let new_acc = (() => {
-        let $ = fun(x);
-        if ($.isOk()) {
-          let x$1 = $[0];
-          return prepend(x$1, acc);
-        } else {
-          return acc;
-        }
-      })();
-      loop$list = xs;
-      loop$fun = fun;
-      loop$acc = new_acc;
-    }
-  }
-}
-
-function filter_map$1(list, fun) {
-  return do_filter_map$1(list, fun, toList([]));
-}
-
-function do_map$1(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list.head;
-      let xs = list.tail;
-      loop$list = xs;
-      loop$fun = fun;
-      loop$acc = prepend(fun(x), acc);
-    }
-  }
-}
-
-function map$1(list, fun) {
-  return do_map$1(list, fun, toList([]));
-}
-
-function do_index_map(loop$list, loop$fun, loop$index, loop$acc) {
-  while (true) {
-    let list = loop$list;
-    let fun = loop$fun;
-    let index = loop$index;
-    let acc = loop$acc;
-    if (list.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list.head;
-      let xs = list.tail;
-      let acc$1 = prepend(fun(x, index), acc);
-      loop$list = xs;
-      loop$fun = fun;
-      loop$index = index + 1;
-      loop$acc = acc$1;
-    }
-  }
-}
-
-function index_map(list, fun) {
-  return do_index_map(list, fun, 0, toList([]));
-}
-
-function each$1(loop$list, loop$f) {
-  while (true) {
-    let list = loop$list;
-    let f = loop$f;
-    if (list.hasLength(0)) {
-      return undefined;
-    } else {
-      let x = list.head;
-      let xs = list.tail;
-      f(x);
-      loop$list = xs;
-      loop$f = f;
-    }
-  }
-}
-
-function do_sized_chunk(
-  loop$list,
-  loop$count,
-  loop$left,
-  loop$current_chunk,
-  loop$acc
-) {
-  while (true) {
-    let list = loop$list;
-    let count = loop$count;
-    let left = loop$left;
-    let current_chunk = loop$current_chunk;
-    let acc = loop$acc;
-    if (list.hasLength(0)) {
-      if (current_chunk.hasLength(0)) {
-        return reverse(acc);
-      } else {
-        let remaining = current_chunk;
-        return reverse(prepend(reverse(remaining), acc));
-      }
-    } else {
-      let first$1 = list.head;
-      let rest$1 = list.tail;
-      let chunk$1 = prepend(first$1, current_chunk);
-      let $ = left > 1;
-      if (!$) {
-        loop$list = rest$1;
-        loop$count = count;
-        loop$left = count;
-        loop$current_chunk = toList([]);
-        loop$acc = prepend(reverse(chunk$1), acc);
-      } else {
-        loop$list = rest$1;
-        loop$count = count;
-        loop$left = left - 1;
-        loop$current_chunk = chunk$1;
-        loop$acc = acc;
-      }
-    }
-  }
-}
-
-function sized_chunk(list, count) {
-  return do_sized_chunk(list, count, count, toList([]), toList([]));
 }
 
 function from_string(string) {
@@ -2198,6 +1872,162 @@ function from_list(list) {
   return fold_list_of_pair(list, new$());
 }
 
+function do_reverse(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
+    } else {
+      let item = remaining.head;
+      let rest$1 = remaining.tail;
+      loop$remaining = rest$1;
+      loop$accumulator = prepend(item, accumulator);
+    }
+  }
+}
+
+function reverse(xs) {
+  return do_reverse(xs, toList([]));
+}
+
+function do_filter_map$1(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list.head;
+      let xs = list.tail;
+      let new_acc = (() => {
+        let $ = fun(x);
+        if ($.isOk()) {
+          let x$1 = $[0];
+          return prepend(x$1, acc);
+        } else {
+          return acc;
+        }
+      })();
+      loop$list = xs;
+      loop$fun = fun;
+      loop$acc = new_acc;
+    }
+  }
+}
+
+function filter_map$1(list, fun) {
+  return do_filter_map$1(list, fun, toList([]));
+}
+
+function do_map$1(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list.head;
+      let xs = list.tail;
+      loop$list = xs;
+      loop$fun = fun;
+      loop$acc = prepend(fun(x), acc);
+    }
+  }
+}
+
+function map$1(list, fun) {
+  return do_map$1(list, fun, toList([]));
+}
+
+function do_index_map(loop$list, loop$fun, loop$index, loop$acc) {
+  while (true) {
+    let list = loop$list;
+    let fun = loop$fun;
+    let index = loop$index;
+    let acc = loop$acc;
+    if (list.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list.head;
+      let xs = list.tail;
+      let acc$1 = prepend(fun(x, index), acc);
+      loop$list = xs;
+      loop$fun = fun;
+      loop$index = index + 1;
+      loop$acc = acc$1;
+    }
+  }
+}
+
+function index_map(list, fun) {
+  return do_index_map(list, fun, 0, toList([]));
+}
+
+function each$1(loop$list, loop$f) {
+  while (true) {
+    let list = loop$list;
+    let f = loop$f;
+    if (list.hasLength(0)) {
+      return undefined;
+    } else {
+      let x = list.head;
+      let xs = list.tail;
+      f(x);
+      loop$list = xs;
+      loop$f = f;
+    }
+  }
+}
+
+function do_sized_chunk(
+  loop$list,
+  loop$count,
+  loop$left,
+  loop$current_chunk,
+  loop$acc
+) {
+  while (true) {
+    let list = loop$list;
+    let count = loop$count;
+    let left = loop$left;
+    let current_chunk = loop$current_chunk;
+    let acc = loop$acc;
+    if (list.hasLength(0)) {
+      if (current_chunk.hasLength(0)) {
+        return reverse(acc);
+      } else {
+        let remaining = current_chunk;
+        return reverse(prepend(reverse(remaining), acc));
+      }
+    } else {
+      let first$1 = list.head;
+      let rest$1 = list.tail;
+      let chunk$1 = prepend(first$1, current_chunk);
+      let $ = left > 1;
+      if (!$) {
+        loop$list = rest$1;
+        loop$count = count;
+        loop$left = count;
+        loop$current_chunk = toList([]);
+        loop$acc = prepend(reverse(chunk$1), acc);
+      } else {
+        loop$list = rest$1;
+        loop$count = count;
+        loop$left = left - 1;
+        loop$current_chunk = chunk$1;
+        loop$acc = acc;
+      }
+    }
+  }
+}
+
+function sized_chunk(list, count) {
+  return do_sized_chunk(list, count, count, toList([]), toList([]));
+}
+
 class Stop extends CustomType {}
 
 class Continue extends CustomType {
@@ -2407,8 +2237,192 @@ function unwrap(result) {
     return a_value;
   } else {
     let err = result[0];
-    throw makeError("panic", "ct/act", 10, "unwrap", inspect(err));
+    throw makeError("panic", "ct/stdext", 119, "unwrap", inspect(err));
   }
+}
+
+function from_raw_item(raw_item) {
+  let _pipe = reflection__new_instance("Item")([raw_item]);
+  return unwrap(_pipe);
+}
+
+function to_item_stack(item) {
+  return reflection__call_method("getItemStack")(item, []);
+}
+
+function copy_item_stack(raw_item_stack) {
+  return reflection__call_method("func_77946_l")(raw_item_stack, []);
+}
+
+function from_raw_item_stack(raw_item_stack) {
+  let _pipe = reflection__new_instance("Item")([raw_item_stack]);
+  return unwrap(_pipe);
+}
+
+function clone_item(item) {
+  let _pipe = item;
+  let _pipe$1 = to_item_stack(_pipe);
+  let _pipe$2 = map$2(_pipe$1, copy_item_stack);
+  let _pipe$3 = flatten(_pipe$2);
+  let _pipe$4 = map$2(_pipe$3, from_raw_item_stack);
+  return flatten(_pipe$4);
+}
+
+function with_name(item, new_name) {
+  return then$(clone_item(item), (cloned_item) => {
+    return then$(
+      reflection__call_method("setName")(cloned_item, [new_name]),
+      (_) => {
+        return new Some(cloned_item);
+      }
+    );
+  });
+}
+
+function with_lore(item, new_lore) {
+  return then$(clone_item(item), (cloned_item) => {
+    let lore_as_array = std__to_js_array(new_lore);
+    return then$(
+      reflection__call_method("setLore")(cloned_item, lore_as_array),
+      (_) => {
+        return new Some(cloned_item);
+      }
+    );
+  });
+}
+
+function item_in_slot(slot) {
+  return reflection__call_method("getItem")(slot, []);
+}
+
+function number_of_slot(slot) {
+  return reflection__call_method("getIndex")(slot, []);
+}
+
+class Initial extends CustomType {}
+
+class Copied extends CustomType {
+  constructor(name, lore) {
+    super();
+    this.name = name;
+    this.lore = lore;
+  }
+}
+
+let creative_gui = "net.minecraft.client.gui.inventory.GuiContainerCreative";
+
+let creative_tab_field = "field_147058_w";
+
+let inventory_creative_tab_ix = 11;
+
+function start$1() {
+  let creative_tab_field_getter = reflection__get_field_value(
+    creative_gui,
+    creative_tab_field
+  );
+  return update_loop__make(
+    new Initial(),
+    toList([
+      new CustomKeybind(
+        "KEY_R",
+        "Copy Item Name & Lore",
+        (state) => {
+          return state;
+        },
+        (state, gui) => {
+          let item = (() => {
+            let _pipe = gui;
+            let _pipe$1 = gui__slot_under_mouse(_pipe);
+            return then$(_pipe$1, item_in_slot);
+          })();
+          if (item instanceof Some) {
+            let item$1 = item[0];
+            std__log("Copied item hovered.");
+            return new Copied(
+              (() => {
+                let _pipe = item$1;
+                return item__name(_pipe);
+              })(),
+              (() => {
+                let _pipe = item$1;
+                return item__lore(_pipe);
+              })()
+            );
+          } else {
+            return state;
+          }
+        }
+      ),
+      new CustomKeybind(
+        "KEY_K",
+        "Paste Item Name & Lore",
+        (state) => {
+          return state;
+        },
+        (state, gui) => {
+          if (state instanceof Initial);
+          else {
+            let name = state.name;
+            let lore = state.lore;
+            let err = (log) => {
+              return () => {
+                return std__log(log);
+              };
+            };
+            lazy_guard(
+              !gui__is_instance_of(gui, creative_gui),
+              err(
+                "You must be in the inventory tab of the creative menu to paste."
+              ),
+              () => {
+                let is_on_inventory_tab = (() => {
+                  let _pipe = creative_tab_field_getter(new Some(gui));
+                  let _pipe$1 = map$2(_pipe, (creative_tab) => {
+                    return creative_tab === inventory_creative_tab_ix;
+                  });
+                  return unwrap$1(_pipe$1, false);
+                })();
+                return lazy_guard(
+                  !is_on_inventory_tab,
+                  err(
+                    "You must be in the inventory tab of the creative menu to paste."
+                  ),
+                  () => {
+                    let item = (() => {
+                      let _pipe = gui;
+                      let _pipe$1 = gui__slot_under_mouse(_pipe);
+                      let _pipe$2 = then$(_pipe$1, item_in_slot);
+                      let _pipe$3 = then$(_pipe$2, (_capture) => {
+                        return with_name(_capture, name);
+                      });
+                      return then$(_pipe$3, (_capture) => {
+                        return with_lore(_capture, lore);
+                      });
+                    })();
+                    let slot = (() => {
+                      let _pipe = gui;
+                      let _pipe$1 = gui__slot_under_mouse(_pipe);
+                      return then$(_pipe$1, number_of_slot);
+                    })();
+                    if (item instanceof Some && slot instanceof Some) {
+                      let item$1 = item[0];
+                      let slot$1 = slot[0];
+                      player__set_hotbar_slot_to_item(item$1, slot$1 - 36);
+                      return std__log("Pasted onto hovered item");
+                    } else {
+                      return std__log("Failed to paste onto hovered item");
+                    }
+                  }
+                );
+              }
+            );
+          }
+          return state;
+        }
+      ),
+    ]),
+    toList([])
+  );
 }
 
 function internal_get_from_give_code(input) {
@@ -2421,7 +2435,7 @@ function internal_get_from_give_code(input) {
 
 function get_item_from_give_code(give_code) {
   let _pipe = internal_get_from_give_code(give_code);
-  return map$2(_pipe, item__from_raw_item);
+  return map$2(_pipe, from_raw_item);
 }
 
 class ShouldUpdate extends CustomType {
@@ -2442,7 +2456,7 @@ class NotActive extends CustomType {}
 
 function start() {
   let file_contents = std__read_file(
-    "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_items_output.txt"
+    "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_pokeindex_output.txt"
   );
   let items = (() => {
     let _pipe = file_contents;
@@ -2535,7 +2549,7 @@ function start() {
             throw makeError(
               "panic",
               "modules/itemgiver",
-              98,
+              91,
               "",
               "panic expression evaluated"
             );

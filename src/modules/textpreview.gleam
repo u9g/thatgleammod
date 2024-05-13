@@ -6,7 +6,7 @@ import ct/reflection.{
 }
 import ct/render
 import ct/std.{is_key_down}
-import ct/stdext.{panic_unwrap_o}
+import ct/stdext.{panic_unwrap_o, unwrap}
 import ct/update_loop
 import gleam/bool
 import gleam/function
@@ -35,13 +35,6 @@ fn in_lore_editor(gui: gui.Gui) -> Bool {
 
 fn in_name_editor(gui: gui.Gui) -> Bool {
   is_instance_of(gui, name_editor_class_name)
-}
-
-fn unwrap(result: Result(a, b)) -> a {
-  case result {
-    Ok(a_value) -> a_value
-    Error(err) -> panic as string.inspect(err)
-  }
 }
 
 const is_focused_field_name = "field_146213_o"
@@ -112,7 +105,7 @@ pub fn start() {
 
             let list_as_array_list =
               reflection.new_instance("ArrayList")(#(lore_lines))
-              |> panic_unwrap_o
+              |> unwrap
 
             list_as_array_list
           }

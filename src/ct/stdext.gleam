@@ -1,6 +1,7 @@
 import gleam/list
 import gleam/option.{type Option, lazy_unwrap as o_lazy_unwrap}
 import gleam/result.{lazy_unwrap as r_lazy_unwrap}
+import gleam/string
 
 fn internal_enumerate(
   list: List(a),
@@ -109,5 +110,12 @@ pub fn deresult(x: Result(a, Nil)) -> Option(a) {
   case x {
     Ok(x) -> option.Some(x)
     Error(_) -> option.None
+  }
+}
+
+pub fn unwrap(result: Result(a, b)) -> a {
+  case result {
+    Ok(a_value) -> a_value
+    Error(err) -> panic as string.inspect(err)
   }
 }

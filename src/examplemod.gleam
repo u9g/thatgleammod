@@ -5,5 +5,5 @@ import modules/textpreview
 pub fn main() {
   copypaste.start()
   itemgiver.start()
-  textpreview.start()
+  // textpreview.start()
 }
