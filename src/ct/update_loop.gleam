@@ -25,7 +25,7 @@ pub type Displayer(a, b) {
   HotbarRender(handler: fn(PostGuiRenderKey, a) -> Nil)
 }
 
-@external(javascript, "../../../../../src/ct/ct_std.js", "update_loop__make")
+@external(javascript, "../../../../../src/ct/ct_std", "update_loop__make")
 pub fn make(
   init: a,
   event_handlers: List(EventHandler(a)),

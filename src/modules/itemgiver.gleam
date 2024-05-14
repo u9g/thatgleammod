@@ -20,7 +20,7 @@ type State {
 pub fn start() {
   let file_contents =
     std.read_file(
-      "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_pokeindex_output.txt",
+      "C:\\Users\\Jason\\Documents\\code\\4-20-24\\examplemod\\z_pokeindex_output.txt",
     )
 
   let items: dict.Dict(Int, List(#(item.Item, Int))) =

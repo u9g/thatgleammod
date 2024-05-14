@@ -1,18 +1,32 @@
-import { toList, Ok, Error } from "../../build/dev/javascript/prelude.mjs";
+/// <reference types="../vendor/ct" />
+
+import {
+  toList,
+  Ok,
+  Error,
+  List,
+} from "../../build/dev/javascript/prelude.mjs";
 import {
   Some,
   None,
 } from "../../build/dev/javascript/gleam_stdlib/gleam/option.mjs";
 
-export function triggers__register_on_tick(fnx) {
+type Nil = undefined;
+declare const global: any;
+
+export function triggers__register_on_tick(fnx: () => Nil) {
   return register("tick", fnx);
 }
 
-export function triggers__register_on_post_gui_render(fnx) {
+export function triggers__register_on_post_gui_render(fnx: () => Nil) {
   return register("postGuiRender", fnx);
 }
 
-export function triggers__every_x_seconds(sec, fnx, defaultValue) {
+export function triggers__every_x_seconds<a>(
+  sec: number,
+  fnx: (arg0: a) => a,
+  defaultValue: a
+) {
   let value = defaultValue;
   return register("step", () => {
     value = fnx(value);
@@ -23,50 +37,50 @@ export function world__get_players() {
   return toList(World.getAllPlayers());
 }
 
-export function player__get_name(player) {
+export function player__get_name(player: Player) {
   return player.getName();
 }
 
-export function player__get_uuid(player) {
+export function player__get_uuid(player: Player) {
   return player.getUUID();
 }
 
-export function std__log(toLog) {
+export function std__log(toLog: any) {
   return ChatLib.chat(toLog);
 }
 
-export function std__log2(toLog) {
+export function std__log2(toLog: any) {
   return console.log(toLog);
 }
 
-export function std__classof(to_get_class_of) {
-  return to_get_class_of.getClass().toString() ?? "??";
+export function std__classof(to_get_class_of: any) {
+  return to_get_class_of?.getClass?.()?.toString?.() ?? "??";
 }
 
 export function std__now() {
   return Client.getSystemTime();
 }
 
-export function std__chat(msg) {
+export function std__chat(msg: string) {
   return ChatLib.say(msg);
 }
 
-export function player__me() {
-  return Player.INSTANCE;
+export function player__me(): Player {
+  return (Player as any).INSTANCE;
 }
 
-export function player__distance_to(thePlayer, otherPlayer) {
-  return thePlayer.distanceTo(otherPlayer.getPlayer());
+export function player__distance_to(thePlayer: Player, otherPlayer: Player) {
+  return (thePlayer as unknown as Entity).distanceTo(otherPlayer.getPlayer());
 }
 
-export function reflection__classof(obj) {
+export function reflection__classof(obj: any): Some | None {
   try {
     const value = obj.getClass();
     if (!value) {
       return new FailedToGetBaseClass();
     }
     return new Ok(value);
-  } catch (e) {
+  } catch (e: any) {
     return new Error(new ThrownError(e.toString()));
   }
 }
@@ -82,9 +96,12 @@ import {
   PrivateJavaMethodCall,
 } from "../../build/dev/javascript/examplemod/ct/reflection.mjs";
 
-export function reflection__get_private_field_value(baseClass, fieldName) {
+export function reflection__get_private_field_value(
+  baseClass: any,
+  fieldName: string
+) {
   let field = baseClass.getDeclaredField(fieldName);
-  return (baseObj) => {
+  return (baseObj: Some | None) => {
     try {
       if (!field) {
         console.log("return early");
@@ -101,8 +118,8 @@ export function reflection__get_private_field_value(baseClass, fieldName) {
   };
 }
 
-export function reflection__field(fieldName) {
-  return (baseObj) => {
+export function reflection__field<T>(fieldName: string) {
+  return (baseObj: any) => {
     let classof = reflection__classof(baseObj);
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
@@ -115,7 +132,7 @@ export function reflection__field(fieldName) {
       field.setAccessible(true);
       return new Ok(
         new FieldReflection(
-          () => {
+          (): Some | None => {
             let value = field.get(baseObj);
             if (value) {
               return new Some(value);
@@ -123,17 +140,17 @@ export function reflection__field(fieldName) {
               return new None();
             }
           },
-          (newValue) => field.set(baseObj, newValue)
+          (newValue: T) => field.set(baseObj, newValue)
         )
       );
-    } catch (e) {
+    } catch (e: any) {
       return new Error(new ThrownError(e.toString()));
     }
   };
 }
 
-export function reflection__get_priv_value(fieldName) {
-  return (baseObj) => {
+export function reflection__get_priv_value(fieldName: string) {
+  return (baseObj: any) => {
     let classof = reflection__classof(baseObj);
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
@@ -145,14 +162,14 @@ export function reflection__get_priv_value(fieldName) {
       }
       field.setAccessible(true);
       return new Ok(field.get(baseObj));
-    } catch (e) {
+    } catch (e: any) {
       return new Error(new ThrownError(e.toString()));
     }
   };
 }
 
-export function reflection__set_priv_value(fieldName) {
-  return (baseObj, value) => {
+export function reflection__set_priv_value(fieldName: string) {
+  return (baseObj: any, value: any) => {
     let classof = reflection__classof(baseObj);
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
@@ -164,48 +181,51 @@ export function reflection__set_priv_value(fieldName) {
       }
       field.setAccessible(true);
       return new Ok(field.set(baseObj, value));
-    } catch (e) {
+    } catch (e: any) {
       return new Error(new ThrownError(e.toString()));
     }
   };
 }
 
-export function reflection__get_static_method(baseClassStr, methodNameStr) {
-  return (args) => {
+export function reflection__get_static_method(
+  baseClass: string,
+  methodName: string
+) {
+  return (args: any[]) => {
     try {
-      const ty = !baseClassStr.includes(".")
-        ? global[baseClassStr]
-        : Java.type(baseClassStr);
+      const ty = !baseClass.includes(".")
+        ? global[baseClass]
+        : Java.type(baseClass);
       if (!ty) {
-        return new Error(FailedToFindJavaType(baseClassStr));
+        return new Error(new FailedToFindJavaType(baseClass));
       }
 
-      let method = ty[methodNameStr];
+      let method = ty[methodName];
       if (!method) {
-        return new Error(new FailedToGetMethod(methodNameStr));
+        return new Error(new FailedToGetMethod(methodName));
       }
 
-      const value = ty[methodNameStr](...args);
+      const value = ty[methodName](...args);
       if (!value) {
         return new Ok(new None());
       }
 
       return new Ok(new Some(value));
-    } catch (e) {
+    } catch (e: any) {
       return new Error(new ThrownError(e.toString()));
     }
   };
 }
 
-export function reflection__new_instance(classNameStr) {
-  const ty = !classNameStr.includes(".")
-    ? global[classNameStr]
-    : Java.type(classNameStr);
+export function reflection__new_instance(className: string) {
+  const ty = !className.includes(".")
+    ? global[className]
+    : Java.type(className);
   if (!ty) {
-    return new Error(FailedToFindJavaType(classNameStr));
+    return new Error(new FailedToFindJavaType(className));
   }
 
-  return (args) => {
+  return (args: any[]) => {
     try {
       const value = new ty(...args);
       if (!value) {
@@ -213,22 +233,25 @@ export function reflection__new_instance(classNameStr) {
       }
 
       return new Ok(new Some(value));
-    } catch (e) {
+    } catch (e: any) {
       return new Error(new ThrownError(e.toString()));
     }
   };
 }
 
-export function reflection__call_method(methodNameStr, callType) {
-  return (baseObject, args) => {
+export function reflection__call_method(
+  methodName: string,
+  callType: PublicCall | PrivateJavaMethodCall | { toString: () => string }
+) {
+  return (baseObject: any, args: any[]) => {
     try {
       let value;
       if (callType instanceof PublicCall) {
-        value = baseObject[methodNameStr](...args);
+        value = baseObject[methodName](...args);
       } else if (callType instanceof PrivateJavaMethodCall) {
         const methodHandle = baseObject
           .getClass()
-          .getDeclaredMethod(methodNameStr);
+          .getDeclaredMethod(methodName);
         methodHandle.setAccessible(true);
         value = methodHandle.invoke(baseObject, ...args);
       } else {
@@ -247,14 +270,17 @@ export function reflection__call_method(methodNameStr, callType) {
   };
 }
 
-export function reflection__get_field_value(baseClassStr, methodNameStr) {
-  return (onObject) => {
+export function reflection__get_field_value(
+  baseClass: string,
+  methodName: string
+) {
+  return (onObject: Some | None) => {
     try {
-      const type = Java.type(baseClassStr);
+      const type = Java.type(baseClass);
       if (!type) {
         return new None();
       }
-      let field = type.class.getDeclaredField(methodNameStr);
+      let field = type.class.getDeclaredField(methodName);
       field.setAccessible(true);
       let fieldValue = field.get(onObject instanceof Some ? onObject[0] : null);
 
@@ -273,7 +299,7 @@ const C10PacketCreativeInventoryAction = Java.type(
   "net.minecraft.network.play.client.C10PacketCreativeInventoryAction"
 );
 
-const loadItemstack = (slot, itemStack) => {
+const loadItemstack = (slot: number, itemStack: MCTItemStack) => {
   Client.sendPacket(
     new C10PacketCreativeInventoryAction(
       slot, // slot, 36=hotbar slot 1
@@ -282,26 +308,39 @@ const loadItemstack = (slot, itemStack) => {
   );
 };
 
-export function player__set_hotbar_slot_to_item(itemToSet, hotbarSlotToFill) {
+export function player__set_hotbar_slot_to_item(
+  itemToSet: Item,
+  hotbarSlotToFill: number
+) {
   loadItemstack(36 + hotbarSlotToFill, itemToSet.getItemStack());
 }
 
-export function player__clear_slot(hotbarSlotToFill) {
-  loadItemstack(36 + hotbarSlotToFill, null);
+export function player__clear_slot(hotbarSlotToFill: number) {
+  loadItemstack(36 + hotbarSlotToFill, null as unknown as MCTItemStack);
 }
 
-export function std__read_file(fromPath) {
+export function std__read_file(fromPath: string) {
   return FileLib.read(fromPath);
 }
 
-const scrollUp = [];
-const scrollDown = [];
-const tick = [];
-const postGuiRender = [];
-const hotbarRender = [];
-const guiKey = [];
-const guiOpened = [];
-const guiClosed = [];
+const scrollUp: ((...args: any[]) => any)[] = [];
+const scrollDown: ((...args: any[]) => any)[] = [];
+const tick: ((...args: any[]) => any)[] = [];
+const postGuiRender: ((...args: any[]) => any)[] = [];
+const hotbarRender: ((...args: any[]) => any)[] = [];
+const guiKey: ((...args: any[]) => any)[] = [];
+const guiOpened: ((...args: any[]) => any)[] = [];
+const guiClosed: ((...args: any[]) => any)[] = [];
+
+const handleNext = {
+  windowOpen: [] as ((...args: any[]) => any)[],
+} as const satisfies Record<string, ((...args: any[]) => any)[]>;
+
+const handleUntil = {
+  renderItemIntoWindow: new Set(),
+} as const satisfies Record<string, Set<(...args: any[]) => any>>;
+
+const thenCall = new Map();
 
 register("scrolled", (x, y, direction) => {
   if (direction === 1) {
@@ -329,10 +368,28 @@ register("guiKey", (char, keycode, gui, event) => {
 
 register("guiOpened", (e) => {
   guiOpened.forEach((fn) => fn(e.gui));
+  for (const handler of handleNext.windowOpen.splice(0)) {
+    console.log("gui called");
+    handler(e.gui);
+  }
 });
 
 register("guiClosed", () => {
   guiClosed.forEach((fn) => fn());
+});
+
+register("renderItemIntoGui", (item) => {
+  let toRemove = [];
+  for (const handler of handleUntil.renderItemIntoWindow) {
+    if (handler(item)) {
+      toRemove.push(handler);
+    }
+  }
+  for (const el of toRemove) {
+    handleUntil.renderItemIntoWindow.delete(el);
+    thenCall.get(el)(item);
+    thenCall.delete(el);
+  }
 });
 
 import {
@@ -347,7 +404,21 @@ import {
   GuiClosed,
 } from "../../build/dev/javascript/examplemod/ct/update_loop.mjs";
 
-export function update_loop__make(init, eventHandlers, displayers) {
+export function update_loop__make<T>(
+  init: T,
+  eventHandlers: {
+    toArray: () => (
+      | ScrollUp
+      | ScrollDown
+      | Tick
+      | CustomCommand
+      | CustomKeybind
+      | GuiOpened
+      | GuiClosed
+    )[];
+  },
+  displayers: { toArray: () => (PostGuiRender | HotbarRender)[] }
+) {
   let value = init;
   for (const eventHandler of eventHandlers.toArray()) {
     if (eventHandler instanceof ScrollUp) {
@@ -368,7 +439,7 @@ export function update_loop__make(init, eventHandlers, displayers) {
       }).setName(eventHandler.custom_command_name);
     } else if (eventHandler instanceof CustomKeybind) {
       const keybind = Client.getKeyBindFromKey(
-        Keyboard[eventHandler.key],
+        Keyboard[eventHandler.key as keyof Keyboard],
         eventHandler.description
       );
       keybind.registerKeyPress(() => {
@@ -418,15 +489,20 @@ export function update_loop__make(init, eventHandlers, displayers) {
   // );
 }
 
-export function render__render_string(_, x, y, toWrite) {
+export function render__render_string(
+  _: Nil,
+  x: number,
+  y: number,
+  toWrite: string
+) {
   Renderer.drawStringWithShadow(toWrite, x, y);
 }
 
-export function render__scale(_, x, y) {
+export function render__scale(_: Nil, x: number, y: number) {
   Renderer.scale(x, y);
 }
 
-export function player__get_item_in_slot(slot) {
+export function player__get_item_in_slot(slot: number) {
   const inventory = Player.getInventory();
   if (inventory) {
     const item = inventory.getStackInSlot(slot);
@@ -438,11 +514,11 @@ export function player__get_item_in_slot(slot) {
   return new None();
 }
 
-export function gui__is_instance_of(gui, className) {
+export function gui__is_instance_of(gui: any, className: string) {
   return gui.class.getName() === className;
 }
 
-export function gui__slot_under_mouse(gui) {
+export function gui__slot_under_mouse(gui: any) {
   const slot = gui?.getSlotUnderMouse?.();
   if (slot) {
     return new Some(new Slot(slot));
@@ -450,7 +526,7 @@ export function gui__slot_under_mouse(gui) {
   return new None();
 }
 
-export function gui__item_in_slot(slot) {
+export function gui__item_in_slot(slot: Slot) {
   const item = slot.getItem();
   if (item) {
     return new Some(item);
@@ -458,11 +534,11 @@ export function gui__item_in_slot(slot) {
   return new None();
 }
 
-export function item__name(item) {
+export function item__name(item: Item) {
   return item.getName();
 }
 
-export function item__lore(item) {
+export function item__lore(item: Item) {
   const itemLore = item.getLore().slice(1);
   itemLore.pop();
   return toList(itemLore);
@@ -480,26 +556,79 @@ export function render__get_font_renderer() {
   return Renderer.getFontRenderer();
 }
 
-export function std__add_color(string) {
+export function std__add_color(string: string) {
   return ChatLib.addColor(string);
 }
 
 export function gui__current_gui() {
-  const gui = Client?.currentGui?.get();
+  const gui = (Client as any)?.currentGui?.get();
   if (gui) {
     return new Some(gui);
   }
   return new None();
 }
 
-export function std__from_js_array(arr) {
+export function std__from_js_array(arr: List) {
   return toList([...arr]);
 }
 
-export function std__is_key_down(keyName) {
+export function std__is_key_down(keyName: keyof Keyboard) {
   return Keyboard.isKeyDown(Keyboard[keyName]);
 }
 
-export function std__to_js_array(arr) {
+export function std__to_js_array(arr: any) {
   return arr.toArray();
+}
+
+const C0EPacketClickWindow = Java.type(
+  "net.minecraft.network.play.client.C0EPacketClickWindow"
+);
+
+export function std__internal_click(
+  slotId: number,
+  mode: number,
+  button: number
+) {
+  Client.sendPacket(
+    new C0EPacketClickWindow(
+      Player.getContainer()!!.getWindowId(),
+      slotId,
+      button,
+      mode,
+      null,
+      0
+    )
+  );
+}
+
+import {
+  RenderItemIntoGui,
+  WindowOpen,
+} from "../../build/dev/javascript/examplemod/ct/events.mjs";
+
+type Event = WindowOpen | RenderItemIntoGui;
+
+export function events__handle_next(event: Event) {
+  if (event instanceof WindowOpen) {
+    handleNext.windowOpen.push(event.handler);
+  } else {
+    throw "Event given to events::handle_next of type that isn't understood";
+  }
+}
+
+export function events__handle_until<T extends Event>(
+  eventFilterer: T,
+  event: T
+) {
+  if (event instanceof RenderItemIntoGui) {
+    if (
+      event instanceof RenderItemIntoGui &&
+      !(eventFilterer instanceof RenderItemIntoGui)
+    )
+      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+    handleUntil.renderItemIntoWindow.add(eventFilterer.handler);
+    thenCall.set(eventFilterer.handler, event.handler);
+  } else {
+    throw "Event given to events::handle_until of type that isn't understood";
+  }
 }

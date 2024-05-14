@@ -1,6 +1,6 @@
 import ct/reflection.{type ReflectionError}
 import ct/std
-import ct/stdext.{unwrap}
+import ct/stdext.{panic_unwrap_o, unwrap}
 import gleam/option.{type Option, then}
 
 pub type Item
@@ -10,13 +10,13 @@ pub type RawItemStack
 pub type RawItem
 
 pub fn from_raw_item(raw_item: RawItem) -> Item {
-  reflection.new_instance("Item")(#(raw_item)) |> unwrap
+  reflection.new_instance("Item")(#(raw_item)) |> unwrap |> panic_unwrap_o
 }
 
-@external(javascript, "../../../../../src/ct/ct_std.js", "item__name")
+@external(javascript, "../../../../../src/ct/ct_std", "item__name")
 pub fn name(item: Item) -> String
 
-@external(javascript, "../../../../../src/ct/ct_std.js", "item__lore")
+@external(javascript, "../../../../../src/ct/ct_std", "item__lore")
 pub fn lore(item: Item) -> List(String)
 
 fn to_item_stack(item: Item) -> Option(RawItemStack) {

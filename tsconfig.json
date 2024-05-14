@@ -3,6 +3,7 @@
     "target": "ES2015",
     "strict": true,
     "strictNullChecks": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowJs": true
   }
 }
