@@ -29,6 +29,11 @@ const addCatchClause = () => {
 
       magicString.replace(/\/gsu\)/g, (_) => "/g)");
 
+      magicString.replace(
+        /\/\/\/ <reference types="[a-zA-Z0-9_./]+" \/\>/g,
+        (_) => ""
+      );
+
       return { code: magicString.toString() };
     },
   };
