@@ -31,14 +31,14 @@ class List {
   // @internal
   atLeastLength(desired) {
     {
-      let iter_5 = this[Symbol.iterator]();
-      let next_5 = iter_5.next();
-      while (!next_5.done) {
-        next_5.value;
+      let iter_root_0 = this[Symbol.iterator]();
+      let next_root_0 = iter_root_0.next();
+      while (!next_root_0.done) {
+        next_root_0.value;
 
         if (desired <= 0) return true;
         desired--;
-        next_5 = iter_5.next();
+        next_root_0 = iter_root_0.next();
       }
     }
     return desired <= 0;
@@ -47,14 +47,14 @@ class List {
   // @internal
   hasLength(desired) {
     {
-      let iter_6 = this[Symbol.iterator]();
-      let next_6 = iter_6.next();
-      while (!next_6.done) {
-        next_6.value;
+      let iter_root_1 = this[Symbol.iterator]();
+      let next_root_1 = iter_root_1.next();
+      while (!next_root_1.done) {
+        next_root_1.value;
 
         if (desired <= 0) return false;
         desired--;
-        next_6 = iter_6.next();
+        next_root_1 = iter_root_1.next();
       }
     }
     return desired === 0;
@@ -63,12 +63,12 @@ class List {
   countLength() {
     let length = 0;
     {
-      let iter_7 = this[Symbol.iterator]();
-      let next_7 = iter_7.next();
-      while (!next_7.done) {
-        next_7.value;
+      let iter_root_2 = this[Symbol.iterator]();
+      let next_root_2 = iter_root_2.next();
+      while (!next_root_2.done) {
+        next_root_2.value;
         ength++;
-        next_7 = iter_7.next();
+        next_root_2 = iter_root_2.next();
       }
     }
     return length;
@@ -233,13 +233,13 @@ function isEqual(x, y) {
 
     let [keys, get] = getters(a);
     {
-      let iter_9 = keys(a)[Symbol.iterator]();
-      let next_9 = iter_9.next();
-      while (!next_9.done) {
-        let k = next_9.value;
+      let iter_isEqual_0 = keys(a)[Symbol.iterator]();
+      let next_isEqual_0 = iter_isEqual_0.next();
+      while (!next_isEqual_0.done) {
+        let k = next_isEqual_0.value;
 
         values.push(get(a, k), get(b, k));
-        next_9 = iter_9.next();
+        next_isEqual_0 = iter_isEqual_0.next();
       }
     }
   }
@@ -1534,12 +1534,12 @@ function inspect$1(v) {
   if (v instanceof Function) {
     let args = [];
     {
-      let iter_13 = Array(v.length).keys()[Symbol.iterator]();
-      let next_13 = iter_13.next();
-      while (!next_13.done) {
-        let i = next_13.value;
+      let iter_inspect_0 = Array(v.length).keys()[Symbol.iterator]();
+      let next_inspect_0 = iter_inspect_0.next();
+      while (!next_inspect_0.done) {
+        let i = next_inspect_0.value;
         rgs.push(String.fromCharCode(i + 97));
-        next_13 = iter_13.next();
+        next_inspect_0 = iter_inspect_0.next();
       }
     }
     return `//fn(${args.join(", ")}) { ... }`;
@@ -1562,13 +1562,13 @@ function inspectObject(v) {
   let name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
   let props = [];
   {
-    let iter_14 = Object.keys(v)[Symbol.iterator]();
-    let next_14 = iter_14.next();
-    while (!next_14.done) {
-      let k = next_14.value;
+    let iter_inspectObject_0 = Object.keys(v)[Symbol.iterator]();
+    let next_inspectObject_0 = iter_inspectObject_0.next();
+    while (!next_inspectObject_0.done) {
+      let k = next_inspectObject_0.value;
 
       props.push(`${inspect$1(k)}: ${inspect$1(v[k])}`);
-      next_14 = iter_14.next();
+      next_inspectObject_0 = iter_inspectObject_0.next();
     }
   }
   let body = props.length ? " " + props.join(", ") + " " : "";
@@ -2012,8 +2012,16 @@ function unwrap(result) {
   }
 }
 
+class LeftClick extends CustomType {}
+
+class ShiftRightClick extends CustomType {}
+
 function click(slot, click_type) {
-  return std__internal_click(slot, 0, 0);
+  if (click_type instanceof LeftClick) {
+    return std__internal_click(slot, 0, 0);
+  } else {
+    return std__internal_click(slot, 1, 1);
+  }
 }
 
 function from_raw_item(raw_item) {
@@ -2082,6 +2090,13 @@ class WindowOpen extends CustomType {
   }
 }
 
+class WindowClose extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
 class RenderItemIntoGui extends CustomType {
   constructor(handler) {
     super();
@@ -2089,7 +2104,6 @@ class RenderItemIntoGui extends CustomType {
   }
 }
 
-/// <reference types="../vendor/ct" />
 function std__log(toLog) {
   return ChatLib.chat(toLog);
 }
@@ -2211,8 +2225,12 @@ let guiOpened = [];
 let guiClosed = [];
 let handleNext = {
   windowOpen: [],
+  windowClose: [],
+  renderItemIntoWindow: [],
 };
 let handleUntil = {
+  windowOpen: new Set(),
+  windowClose: new Set(),
   renderItemIntoWindow: new Set(),
 };
 let thenCall = new Map();
@@ -2237,55 +2255,95 @@ register("guiKey", (char, keycode, gui, event) => {
 });
 register("guiOpened", (e) => {
   guiOpened.forEach((fn) => fn(e.gui));
+  let gui = e.gui;
   {
-    let iter_0 = handleNext.windowOpen.splice(0)[Symbol.iterator]();
-    let next_0 = iter_0.next();
-    while (!next_0.done) {
-      let handler = next_0.value;
+    let iter_root_0 = handleNext.windowOpen.splice(0)[Symbol.iterator]();
+    let next_root_0 = iter_root_0.next();
+    while (!next_root_0.done) {
+      let handlerHolder = next_root_0.value;
 
-      console.log("gui called");
-      handler(e.gui);
-      next_0 = iter_0.next();
+      handlerHolder.handler(gui);
+      next_root_0 = iter_root_0.next();
+    }
+  }
+  {
+    let iter_root_1 = handleUntil.windowOpen[Symbol.iterator]();
+    let next_root_1 = iter_root_1.next();
+    while (!next_root_1.done) {
+      let handlerHolder = next_root_1.value;
+
+      if (handlerHolder.handler(gui)) {
+        handleUntil.windowOpen.delete(handlerHolder);
+        thenCall.get(handlerHolder).handler(gui);
+        thenCall.delete(handlerHolder);
+      }
+      next_root_1 = iter_root_1.next();
     }
   }
 });
 register("guiClosed", () => {
   guiClosed.forEach((fn) => fn());
-});
-register("renderItemIntoGui", (item) => {
-  let toRemove = [];
   {
-    let iter_1 = handleUntil.renderItemIntoWindow[Symbol.iterator]();
-    let next_1 = iter_1.next();
-    while (!next_1.done) {
-      let handler = next_1.value;
+    let iter_root_2 = handleNext.windowClose.splice(0)[Symbol.iterator]();
+    let next_root_2 = iter_root_2.next();
+    while (!next_root_2.done) {
+      let handlerHolder = next_root_2.value;
 
-      if (handler(item)) {
-        toRemove.push(handler);
-      }
-      next_1 = iter_1.next();
+      handlerHolder.handler();
+      next_root_2 = iter_root_2.next();
     }
   }
   {
-    let iter_2 = toRemove[Symbol.iterator]();
-    let next_2 = iter_2.next();
-    while (!next_2.done) {
-      let el = next_2.value;
+    let iter_root_3 = handleUntil.windowClose[Symbol.iterator]();
+    let next_root_3 = iter_root_3.next();
+    while (!next_root_3.done) {
+      let handlerHolder = next_root_3.value;
 
-      handleUntil.renderItemIntoWindow.delete(el);
-      thenCall.get(el)(item);
-      thenCall.delete(el);
-      next_2 = iter_2.next();
+      if (handlerHolder.handler()) {
+        handleUntil.windowClose.delete(handlerHolder);
+        thenCall.get(handlerHolder).handler();
+        thenCall.delete(handlerHolder);
+      }
+      next_root_3 = iter_root_3.next();
+    }
+  }
+});
+register("renderItemIntoGui", (item) => {
+  let _item = item;
+  {
+    let iter_root_4 = handleNext.renderItemIntoWindow
+      .splice(0)
+      [Symbol.iterator]();
+    let next_root_4 = iter_root_4.next();
+    while (!next_root_4.done) {
+      let handlerHolder = next_root_4.value;
+
+      handlerHolder.handler(_item);
+      next_root_4 = iter_root_4.next();
+    }
+  }
+  {
+    let iter_root_5 = handleUntil.renderItemIntoWindow[Symbol.iterator]();
+    let next_root_5 = iter_root_5.next();
+    while (!next_root_5.done) {
+      let handler = next_root_5.value;
+
+      if (handler.handler(_item)) {
+        handleUntil.renderItemIntoWindow.delete(handler);
+        thenCall.get(handler).handler(_item);
+        thenCall.delete(handler);
+      }
+      next_root_5 = iter_root_5.next();
     }
   }
 });
 function update_loop__make(init, eventHandlers, displayers) {
   let value = init;
   {
-    let iter_3 = eventHandlers.toArray()[Symbol.iterator]();
-    let next_3 = iter_3.next();
-    while (!next_3.done) {
-      let eventHandler = next_3.value;
+    let iter_update_loop__make_0 = eventHandlers.toArray()[Symbol.iterator]();
+    let next_update_loop__make_0 = iter_update_loop__make_0.next();
+    while (!next_update_loop__make_0.done) {
+      let eventHandler = next_update_loop__make_0.value;
 
       if (eventHandler instanceof ScrollUp) {
         scrollUp.push(() => {
@@ -2327,14 +2385,14 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected event handler!!!");
       }
-      next_3 = iter_3.next();
+      next_update_loop__make_0 = iter_update_loop__make_0.next();
     }
   }
   {
-    let iter_4 = displayers.toArray()[Symbol.iterator]();
-    let next_4 = iter_4.next();
-    while (!next_4.done) {
-      let displayer = next_4.value;
+    let iter_update_loop__make_1 = displayers.toArray()[Symbol.iterator]();
+    let next_update_loop__make_1 = iter_update_loop__make_1.next();
+    while (!next_update_loop__make_1.done) {
+      let displayer = next_update_loop__make_1.value;
 
       if (displayer instanceof PostGuiRender) {
         postGuiRender.push((gui) => {
@@ -2347,7 +2405,7 @@ function update_loop__make(init, eventHandlers, displayers) {
       } else {
         ChatLib.chat("unexpected displayer!!!");
       }
-      next_4 = iter_4.next();
+      next_update_loop__make_1 = iter_update_loop__make_1.next();
     }
   }
   // console.log(
@@ -2398,6 +2456,9 @@ function item__lore(item) {
   itemLore.pop();
   return toList(itemLore);
 }
+function std__remove_color(string) {
+  return ChatLib.removeFormatting(string);
+}
 function std__to_js_array(arr) {
   return arr.toArray();
 }
@@ -2412,28 +2473,65 @@ function std__internal_click(slotId, mode, button) {
       button,
       mode,
       null,
-      0
+      1
     )
   );
 }
 function events__handle_next(event) {
   if (event instanceof WindowOpen) {
-    handleNext.windowOpen.push(event.handler);
+    handleNext.windowOpen.push(event);
+  } else if (event instanceof WindowClose) {
+    handleNext.windowClose.push(event);
+  } else if (event instanceof RenderItemIntoGui) {
+    handleNext.renderItemIntoWindow.push(event);
   } else {
     throw "Event given to events::handle_next of type that isn't understood";
   }
 }
 function events__handle_until(eventFilterer, event) {
-  if (event instanceof RenderItemIntoGui) {
-    if (
-      event instanceof RenderItemIntoGui &&
-      !(eventFilterer instanceof RenderItemIntoGui)
-    )
-      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
-    handleUntil.renderItemIntoWindow.add(eventFilterer.handler);
-    thenCall.set(eventFilterer.handler, event.handler);
+  if (
+    (event instanceof RenderItemIntoGui &&
+      !(eventFilterer instanceof RenderItemIntoGui)) ||
+    (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
+    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose))
+  )
+    throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+  if (
+    event instanceof RenderItemIntoGui &&
+    eventFilterer instanceof RenderItemIntoGui
+  ) {
+    handleUntil.renderItemIntoWindow.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof WindowOpen &&
+    eventFilterer instanceof WindowOpen
+  ) {
+    handleUntil.windowOpen.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof WindowClose &&
+    eventFilterer instanceof WindowClose
+  ) {
+    handleUntil.windowClose.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
   } else {
     throw "Event given to events::handle_until of type that isn't understood";
+  }
+}
+function std__write_into_anvil(input) {
+  if (Client.currentGui.getClassName() === "GuiRepair") {
+    // check if in anvil gui
+    let outputSlotField =
+      Player.getContainer().container.class.getDeclaredField("field_82852_f");
+    outputSlotField.setAccessible(true);
+    let outputSlot = outputSlotField.get(Player.getContainer().container); // outputSlot is a net.minecraft.inventory.InventoryCraftResult
+    let outputSlotItemField =
+      outputSlot.class.getDeclaredField("field_70467_a");
+    outputSlotItemField.setAccessible(true);
+    let outputSlotItem = outputSlotItemField.get(outputSlot); // array with one item, net.minecraft.item.ItemStack
+    outputSlotItem[0] = new Item(339).setName(input).itemStack; // set the single item in the array an item with the name of the input
+    outputSlotItemField.set(outputSlot, outputSlotItem); // actually set the outputSlot in the anvil to the new item
+    Player.getContainer().click(2, false); // click that new item
   }
 }
 
@@ -2737,40 +2835,79 @@ function start$1() {
   );
 }
 
+function handle_next_window_open(handler) {
+  return events__handle_next(new WindowOpen(handler));
+}
+
+function handle_next_window_close(handler) {
+  return events__handle_next(new WindowClose(handler));
+}
+
+function handle_until_render_item_into_gui(handler_until, handler) {
+  return events__handle_until(
+    new RenderItemIntoGui(handler_until),
+    new RenderItemIntoGui(handler)
+  );
+}
+
+function wait_for_item(item_name, handler) {
+  return handle_until_render_item_into_gui(
+    (item) => {
+      return std__remove_color(item__name(item)) === item_name;
+    },
+    (_) => {
+      return handler();
+    }
+  );
+}
+
 function start() {
-  return update_loop__make(
+  update_loop__make(
     undefined,
     toList([
       new CustomCommand("ifix", (state) => {
         std__chat("/edit");
-        return ((handler) => {
-          return events__handle_next(new WindowOpen(handler));
-        })((_) => {
-          return ((handler) => {
-            return events__handle_until(
-              new RenderItemIntoGui((item) => {
-                let $ = (() => {
-                  let _pipe = item;
-                  return item__name(_pipe);
-                })();
-                if ($ === "§aEdit Actions") {
-                  return true;
-                } else {
-                  return false;
-                }
-              }),
-              new RenderItemIntoGui(handler)
-            );
-          })((_) => {
-            click(34);
-            std__log("clicked");
-            return state;
+        return handle_next_window_open((_) => {
+          return wait_for_item("Edit Actions", () => {
+            click(34, new LeftClick());
+            return wait_for_item("Add Action", () => {
+              click(50, new LeftClick());
+              return wait_for_item("Change Player Stat", () => {
+                click(25, new LeftClick());
+                return wait_for_item("Stat", () => {
+                  click(10, new LeftClick());
+                  return handle_next_window_close(() => {
+                    std__chat("attacker_id");
+                    return handle_next_window_open((_) => {
+                      return wait_for_item("Mode", () => {
+                        click(11, new LeftClick());
+                        return wait_for_item("Set", () => {
+                          click(12, new LeftClick());
+                          return wait_for_item("Amount", () => {
+                            click(12, new LeftClick());
+                            return wait_for_item("1", () => {
+                              std__write_into_anvil("19");
+                              return handle_next_window_open((_) => {
+                                click(34, new LeftClick());
+                                click(22, new ShiftRightClick());
+                                return state;
+                              });
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
           });
         });
       }),
     ]),
     toList([])
   );
+  return undefined;
 }
 
 function main() {
