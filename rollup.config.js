@@ -39,8 +39,6 @@ const addCatchClause = () => {
   };
 };
 
-let j = 0;
-
 const astChanger = () => {
   return {
     name: "ast-changer",
@@ -54,15 +52,45 @@ const astChanger = () => {
 
       const magicString = new MagicString(code);
 
+      let functionName = "root";
+      let previousNames = new Set();
+
+      function nextName() {
+        let i = 0;
+        while (previousNames.has(`${functionName}_${i}`)) {
+          i++;
+        }
+
+        previousNames.add(`${functionName}_${i}`);
+
+        return `${functionName}_${i}`;
+      }
+
       walk(ast, {
+        leave: (node) => {
+          if (
+            node.type === "FunctionDeclaration" &&
+            node.id.type === "Identifier"
+          ) {
+            functionName = node.previousName;
+            delete node.previousName;
+          }
+        },
         enter: (node) => {
+          if (
+            node.type === "FunctionDeclaration" &&
+            node.id.type === "Identifier"
+          ) {
+            node.previousName = functionName;
+            functionName = node.id.name;
+          }
           if (node.type === "ForOfStatement") {
             magicString.addSourcemapLocation(node.start);
             magicString.addSourcemapLocation(node.end);
 
             magicString.remove(node.start, node.end);
 
-            let k = j++;
+            let k = nextName();
 
             // Can't use because a for-i loop doesn't work for things that just implement
             // Symbol.iterator
