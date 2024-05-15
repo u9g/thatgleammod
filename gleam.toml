@@ -13,8 +13,15 @@ target = "javascript"
 # For a full reference of all the available options, you can have a look at
 # https://gleam.run/writing-gleam/gleam-toml/.
 
+[javascript]
+# Generate TypeScript .d.ts files
+typescript_declarations = true
+
 [dependencies]
 gleam_stdlib = ">= 0.37.0 and < 1.0.0"
 shellout = ">= 1.6.0 and < 2.0.0"
+glance = "~> 0.8.1"
+simplifile = ">= 1.7.0 and < 2.0.0"
+glance_printer = {path = "C:\\Users\\Jason\\Documents\\code\\4-20-24\\glance_printer"}
 
 [dev-dependencies]
