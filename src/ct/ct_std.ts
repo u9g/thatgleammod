@@ -73,7 +73,7 @@ export function player__distance_to(thePlayer: Player, otherPlayer: Player) {
   return (thePlayer as unknown as Entity).distanceTo(otherPlayer.getPlayer());
 }
 
-export function reflection__classof(obj: any): Some | None {
+export function reflection__classof(obj: any): Some<Class$> | None {
   try {
     const value = obj.getClass();
     if (!value) {
@@ -94,6 +94,7 @@ import {
   FailedToGetMethod,
   PublicCall,
   PrivateJavaMethodCall,
+  Class$,
 } from "../../build/dev/javascript/examplemod/ct/reflection.mjs";
 
 export function reflection__get_private_field_value(
@@ -101,7 +102,7 @@ export function reflection__get_private_field_value(
   fieldName: string
 ) {
   let field = baseClass.getDeclaredField(fieldName);
-  return (baseObj: Some | None) => {
+  return (baseObj: Some<any> | None) => {
     try {
       if (!field) {
         console.log("return early");
@@ -124,7 +125,7 @@ export function reflection__field<T>(fieldName: string) {
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
     }
-    let field = classof[0].getDeclaredField(fieldName);
+    let field = (classof[0] as any).getDeclaredField(fieldName);
     try {
       if (!field) {
         return new Error(new FailedToGetDeclaredField(fieldName));
@@ -132,7 +133,7 @@ export function reflection__field<T>(fieldName: string) {
       field.setAccessible(true);
       return new Ok(
         new FieldReflection(
-          (): Some | None => {
+          (): Some<any> | None => {
             let value = field.get(baseObj);
             if (value) {
               return new Some(value);
@@ -155,7 +156,7 @@ export function reflection__get_priv_value(fieldName: string) {
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
     }
-    let field = classof[0].getDeclaredField(fieldName);
+    let field = (classof[0] as any).getDeclaredField(fieldName);
     try {
       if (!field) {
         return new Error(new FailedToGetDeclaredField(fieldName));
@@ -174,7 +175,7 @@ export function reflection__set_priv_value(fieldName: string) {
     if (classof instanceof None) {
       return new Error(new FailedToGetBaseClass());
     }
-    let field = classof[0].getDeclaredField(fieldName);
+    let field = (classof[0] as any).getDeclaredField(fieldName);
     try {
       if (!field) {
         return new Error(new FailedToGetDeclaredField(fieldName));
@@ -332,15 +333,21 @@ const guiKey: ((...args: any[]) => any)[] = [];
 const guiOpened: ((...args: any[]) => any)[] = [];
 const guiClosed: ((...args: any[]) => any)[] = [];
 
+type HandlerHolder = { handler: (...args: any[]) => any };
+
 const handleNext = {
-  windowOpen: [] as ((...args: any[]) => any)[],
-} as const satisfies Record<string, ((...args: any[]) => any)[]>;
+  windowOpen: [] as WindowOpen[],
+  windowClose: [] as WindowClose[],
+  renderItemIntoWindow: [] as RenderItemIntoGui[],
+};
 
 const handleUntil = {
-  renderItemIntoWindow: new Set(),
-} as const satisfies Record<string, Set<(...args: any[]) => any>>;
+  windowOpen: new Set() as Set<WindowOpen>,
+  windowClose: new Set() as Set<WindowClose>,
+  renderItemIntoWindow: new Set() as Set<RenderItemIntoGui>,
+};
 
-const thenCall = new Map();
+const thenCall: Map<HandlerHolder, HandlerHolder> = new Map();
 
 register("scrolled", (x, y, direction) => {
   if (direction === 1) {
@@ -368,27 +375,44 @@ register("guiKey", (char, keycode, gui, event) => {
 
 register("guiOpened", (e) => {
   guiOpened.forEach((fn) => fn(e.gui));
-  for (const handler of handleNext.windowOpen.splice(0)) {
-    console.log("gui called");
-    handler(e.gui);
+  let gui = e.gui as any;
+  for (const handlerHolder of handleNext.windowOpen.splice(0)) {
+    handlerHolder.handler(gui);
+  }
+  for (const handlerHolder of handleUntil.windowOpen) {
+    if (handlerHolder.handler(gui)) {
+      handleUntil.windowOpen.delete(handlerHolder);
+      thenCall.get(handlerHolder)!!.handler(gui);
+      thenCall.delete(handlerHolder);
+    }
   }
 });
 
 register("guiClosed", () => {
   guiClosed.forEach((fn) => fn());
+  for (const handlerHolder of handleNext.windowClose.splice(0)) {
+    handlerHolder.handler();
+  }
+  for (const handlerHolder of handleUntil.windowClose) {
+    if (handlerHolder.handler()) {
+      handleUntil.windowClose.delete(handlerHolder);
+      thenCall.get(handlerHolder)!!.handler();
+      thenCall.delete(handlerHolder);
+    }
+  }
 });
 
 register("renderItemIntoGui", (item) => {
-  let toRemove = [];
-  for (const handler of handleUntil.renderItemIntoWindow) {
-    if (handler(item)) {
-      toRemove.push(handler);
-    }
+  let _item = item as any;
+  for (const handlerHolder of handleNext.renderItemIntoWindow.splice(0)) {
+    handlerHolder.handler(_item);
   }
-  for (const el of toRemove) {
-    handleUntil.renderItemIntoWindow.delete(el);
-    thenCall.get(el)(item);
-    thenCall.delete(el);
+  for (const handler of handleUntil.renderItemIntoWindow) {
+    if (handler.handler(_item)) {
+      handleUntil.renderItemIntoWindow.delete(handler);
+      thenCall.get(handler)!!.handler(_item);
+      thenCall.delete(handler);
+    }
   }
 });
 
@@ -402,22 +426,16 @@ import {
   CustomKeybind,
   GuiOpened,
   GuiClosed,
+  EventHandler$,
+  Displayer$,
 } from "../../build/dev/javascript/examplemod/ct/update_loop.mjs";
 
 export function update_loop__make<T>(
   init: T,
   eventHandlers: {
-    toArray: () => (
-      | ScrollUp
-      | ScrollDown
-      | Tick
-      | CustomCommand
-      | CustomKeybind
-      | GuiOpened
-      | GuiClosed
-    )[];
+    toArray: () => EventHandler$<T>[];
   },
-  displayers: { toArray: () => (PostGuiRender | HotbarRender)[] }
+  displayers: { toArray: () => Displayer$<T, any>[] }
 ) {
   let value = init;
   for (const eventHandler of eventHandlers.toArray()) {
@@ -466,11 +484,11 @@ export function update_loop__make<T>(
   for (const displayer of displayers.toArray()) {
     if (displayer instanceof PostGuiRender) {
       postGuiRender.push((gui) => {
-        displayer.handler(/*key*/ undefined, value, gui);
+        displayer.handler(/*key*/ undefined as any, value, gui);
       });
     } else if (displayer instanceof HotbarRender) {
       hotbarRender.push(() => {
-        displayer.handler(/*key*/ undefined, value);
+        displayer.handler(/*key*/ undefined as any, value);
       });
     } else {
       ChatLib.chat("unexpected displayer!!!");
@@ -560,6 +578,10 @@ export function std__add_color(string: string) {
   return ChatLib.addColor(string);
 }
 
+export function std__remove_color(string: string) {
+  return ChatLib.removeFormatting(string);
+}
+
 export function gui__current_gui() {
   const gui = (Client as any)?.currentGui?.get();
   if (gui) {
@@ -568,7 +590,7 @@ export function gui__current_gui() {
   return new None();
 }
 
-export function std__from_js_array(arr: List) {
+export function std__from_js_array<T>(arr: List<T>) {
   return toList([...arr]);
 }
 
@@ -596,39 +618,84 @@ export function std__internal_click(
       button,
       mode,
       null,
-      0
+      1
     )
   );
 }
 
 import {
+  Event$,
   RenderItemIntoGui,
+  WindowClose,
   WindowOpen,
-} from "../../build/dev/javascript/examplemod/ct/events.mjs";
+} from "../../build/dev/javascript/examplemod/ct/event.mjs";
 
-type Event = WindowOpen | RenderItemIntoGui;
-
-export function events__handle_next(event: Event) {
+export function events__handle_next(event: Event$<any>) {
   if (event instanceof WindowOpen) {
-    handleNext.windowOpen.push(event.handler);
+    handleNext.windowOpen.push(event);
+  } else if (event instanceof WindowClose) {
+    handleNext.windowClose.push(event);
+  } else if (event instanceof RenderItemIntoGui) {
+    handleNext.renderItemIntoWindow.push(event);
   } else {
     throw "Event given to events::handle_next of type that isn't understood";
   }
 }
 
-export function events__handle_until<T extends Event>(
+export function events__handle_until<K, T extends Event$<K>>(
   eventFilterer: T,
   event: T
 ) {
-  if (event instanceof RenderItemIntoGui) {
-    if (
-      event instanceof RenderItemIntoGui &&
-      !(eventFilterer instanceof RenderItemIntoGui)
-    )
-      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
-    handleUntil.renderItemIntoWindow.add(eventFilterer.handler);
-    thenCall.set(eventFilterer.handler, event.handler);
+  if (
+    (event instanceof RenderItemIntoGui &&
+      !(eventFilterer instanceof RenderItemIntoGui)) ||
+    (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
+    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose))
+  )
+    throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+
+  if (
+    event instanceof RenderItemIntoGui &&
+    eventFilterer instanceof RenderItemIntoGui
+  ) {
+    handleUntil.renderItemIntoWindow.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof WindowOpen &&
+    eventFilterer instanceof WindowOpen
+  ) {
+    handleUntil.windowOpen.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof WindowClose &&
+    eventFilterer instanceof WindowClose
+  ) {
+    handleUntil.windowClose.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
   } else {
     throw "Event given to events::handle_until of type that isn't understood";
+  }
+}
+
+export function std__write_into_anvil(input: string) {
+  if ((Client as any).currentGui.getClassName() === "GuiRepair") {
+    // check if in anvil gui
+    let outputSlotField =
+      Player.getContainer()!!.container.class.getDeclaredField(
+        "field_82852_f"
+      ) as any;
+    outputSlotField.setAccessible(true);
+    let outputSlot = outputSlotField.get(Player.getContainer()!!.container); // outputSlot is a net.minecraft.inventory.InventoryCraftResult
+
+    let outputSlotItemField =
+      outputSlot.class.getDeclaredField("field_70467_a");
+    outputSlotItemField.setAccessible(true);
+    let outputSlotItem = outputSlotItemField.get(outputSlot); // array with one item, net.minecraft.item.ItemStack
+
+    outputSlotItem[0] = new Item(339).setName(input).itemStack; // set the single item in the array an item with the name of the input
+
+    outputSlotItemField.set(outputSlot, outputSlotItem); // actually set the outputSlot in the anvil to the new item
+
+    Player.getContainer()!!.click(2, false); // click that new item
   }
 }
