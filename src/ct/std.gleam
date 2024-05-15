@@ -23,6 +23,9 @@ pub fn read_file(path: String) -> String
 @external(javascript, "../../../../../src/ct/ct_std", "std__add_color")
 pub fn add_color(input: String) -> String
 
+@external(javascript, "../../../../../src/ct/ct_std", "std__remove_color")
+pub fn remove_color(input: String) -> String
+
 @external(javascript, "../../../../../src/ct/ct_std", "std__from_js_array")
 pub fn from_js_array(array: a) -> List(b)
 
@@ -34,6 +37,7 @@ pub fn is_key_down(key_name: String) -> Bool
 
 pub type ClickType {
   LeftClick
+  ShiftRightClick
 }
 
 @external(javascript, "../../../../../src/ct/ct_std", "std__internal_click")
@@ -41,8 +45,10 @@ fn internal_click(slot: Int, mode: Int, button: Int) -> Nil
 
 pub fn click(slot: Int, click_type: ClickType) {
   case click_type {
-    LeftClick -> {
-      internal_click(slot, 0, 0)
-    }
+    LeftClick -> internal_click(slot, 0, 0)
+    ShiftRightClick -> internal_click(slot, 1, 1)
   }
 }
+
+@external(javascript, "../../../../../src/ct/ct_std", "std__write_into_anvil")
+pub fn write_into_anvil(to_write: String) -> Nil
