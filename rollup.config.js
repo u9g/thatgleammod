@@ -39,11 +39,11 @@ let j = 0;
 const astChanger = () => {
   return {
     name: "ast-changer",
-    transform(code) {
+    transform(code, id) {
       try {
         ast = this.parse(code);
       } catch (err) {
-        err.message += ` in ${id}`;
+        err.message += ` in ast-changer for id='${id}'`;
         throw err;
       }
 
