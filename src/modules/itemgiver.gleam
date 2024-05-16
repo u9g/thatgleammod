@@ -18,10 +18,9 @@ type State {
 }
 
 pub fn start() {
-  let file_contents =
-    std.read_file(
-      "C:\\Users\\Jason\\Documents\\code\\4-20-24\\examplemod\\z_pokeindex_output.txt",
-    )
+  let in_file = std.read_file("item_giver_in_file_path.txt")
+  std.log2("out file: " <> in_file)
+  let file_contents = std.read_file(in_file)
 
   let items: dict.Dict(Int, List(#(item.Item, Int))) =
     file_contents

@@ -22,3 +22,6 @@ pub fn item_in_slot(slot: Slot) -> Option(Item) {
 pub fn number_of_slot(slot: Slot) -> Option(Int) {
   reflection.call_method("getIndex", PublicCall)(slot, #())
 }
+
+@external(javascript, "../../../../../src/ct/ct_std", "gui__close_current_window")
+pub fn close_current_window() -> Nil

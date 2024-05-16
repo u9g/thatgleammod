@@ -20,6 +20,9 @@ pub fn classof(x: a) -> String
 @external(javascript, "../../../../../src/ct/ct_std", "std__read_file")
 pub fn read_file(path: String) -> String
 
+@external(javascript, "../../../../../src/ct/ct_std", "std__write_to_file")
+pub fn write_to_file(path: String, to_write: String) -> String
+
 @external(javascript, "../../../../../src/ct/ct_std", "std__add_color")
 pub fn add_color(input: String) -> String
 
@@ -37,6 +40,7 @@ pub fn is_key_down(key_name: String) -> Bool
 
 pub type ClickType {
   LeftClick
+  ShiftLeftClick
   ShiftRightClick
 }
 
@@ -46,6 +50,7 @@ fn internal_click(slot: Int, mode: Int, button: Int) -> Nil
 pub fn click(slot: Int, click_type: ClickType) {
   case click_type {
     LeftClick -> internal_click(slot, 0, 0)
+    ShiftLeftClick -> internal_click(slot, 1, 0)
     ShiftRightClick -> internal_click(slot, 1, 1)
   }
 }

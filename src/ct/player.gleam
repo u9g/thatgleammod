@@ -25,3 +25,9 @@ pub fn set_hotbar_slot_to_item(item_to_set: Item, hotbar_slot_num: Int) -> Nil
 
 @external(javascript, "../../../../../src/ct/ct_std", "player__clear_slot")
 pub fn clear_slot(hotbar_slot_num: Int) -> Nil
+
+@external(javascript, "../../../../../src/ct/ct_std", "player__get_held_slot_index")
+pub fn get_hold_slot_index() -> Int
+
+@external(javascript, "../../../../../src/ct/ct_std", "player__set_held_slot_index")
+pub fn set_hold_slot_index(x: Int) -> Nil

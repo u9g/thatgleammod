@@ -5,8 +5,6 @@ import gleam/option.{type Option, then}
 
 pub type Item
 
-pub type RawItemStack
-
 pub type RawItem
 
 pub fn from_raw_item(raw_item: RawItem) -> Item {
@@ -19,18 +17,18 @@ pub fn name(item: Item) -> String
 @external(javascript, "../../../../../src/ct/ct_std", "item__lore")
 pub fn lore(item: Item) -> List(String)
 
-fn to_item_stack(item: Item) -> Option(RawItemStack) {
+pub fn to_item_stack(item: Item) -> Option(RawItem) {
   reflection.call_method("getItemStack", reflection.PublicCall)(item, #())
 }
 
-fn copy_item_stack(raw_item_stack: RawItemStack) -> Option(RawItemStack) {
+fn copy_item_stack(raw_item_stack: RawItem) -> Option(RawItem) {
   reflection.call_method("func_77946_l", reflection.PublicCall)(
     raw_item_stack,
     #(),
   )
 }
 
-fn from_raw_item_stack(raw_item_stack: RawItemStack) -> Option(Item) {
+fn from_raw_item_stack(raw_item_stack: RawItem) -> Option(Item) {
   reflection.new_instance("Item")(#(raw_item_stack)) |> unwrap
 }
 
