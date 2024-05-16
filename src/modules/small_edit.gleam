@@ -92,7 +92,34 @@ fn run_on_current_hotbar_slot(out_file: String, done: fn() -> a) {
   done()
 }
 
+fn run_on_slot(out_file: String, i: Int, done: fn() -> Nil) {
+  use <- run_on_current_hotbar_slot(out_file)
+  std.log2("I'm done slot: " <> int.to_string(i))
+  player.set_hold_slot_index(i + 1)
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  use <- events.handle_next_transaction_packet()
+  done()
+}
+
 // const out_file = "C:\\Users\\Jason\\Documents\\code\\4-20-24\\examplemod\\out.txt"
+
+pub type State {
+  NotRunning
+  InProgress
+}
 
 pub fn start() {
   let out_file = std.read_file("small_edit_out_file_path.txt")
@@ -113,33 +140,23 @@ pub fn start() {
             },
           )
           std.log2("I'm starting!")
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(0))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(1))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(2))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(3))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(4))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(5))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(6))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(7))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
-          use <- run_on_current_hotbar_slot(out_file)
-          std.log2("I'm done slot: " <> int.to_string(8))
-          player.set_hold_slot_index(player.get_hold_slot_index() + 1)
+          use <- run_on_slot(out_file, 0)
+          use <- run_on_slot(out_file, 1)
+          use <- run_on_slot(out_file, 2)
+          use <- run_on_slot(out_file, 3)
+          use <- run_on_slot(out_file, 4)
+          use <- run_on_slot(out_file, 5)
+          use <- run_on_slot(out_file, 6)
+          use <- run_on_slot(out_file, 7)
+          state
+        },
+      ),
+      update_loop.CustomKeybind(
+        key: "KEY_X",
+        description: "reload ct",
+        gui_key_handler: fn(state, _) { state },
+        handler: fn(state) {
+          std.ctreload()
           state
         },
       ),

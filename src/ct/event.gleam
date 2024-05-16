@@ -4,6 +4,7 @@ import ct/item.{type Item}
 pub type Event(a) {
   WindowOpen(handler: fn(Gui) -> a)
   WindowClose(handler: fn() -> a)
+  TransactionPacket(handler: fn() -> a)
   RenderItemIntoGui(handler: fn(Item) -> a)
 }
 

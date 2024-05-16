@@ -26,6 +26,20 @@ pub fn handle_until_window_close(handler_until: fn() -> Bool, handler: fn() -> a
   )
 }
 
+pub fn handle_next_transaction_packet(handler: fn() -> a) {
+  event.handle_next(event.TransactionPacket(handler))
+}
+
+pub fn handle_until_transaction_packet(
+  handler_until: fn() -> Bool,
+  handler: fn() -> a,
+) {
+  event.handle_until(
+    event.TransactionPacket(handler_until),
+    event.TransactionPacket(handler),
+  )
+}
+
 pub fn handle_next_render_item_into_gui(handler: fn(Item) -> a) {
   event.handle_next(event.RenderItemIntoGui(handler))
 }

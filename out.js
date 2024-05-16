@@ -2109,6 +2109,13 @@ class WindowClose extends CustomType {
   }
 }
 
+class TransactionPacket extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
 class RenderItemIntoGui extends CustomType {
   constructor(handler) {
     super();
@@ -2245,10 +2252,12 @@ let handleNext = {
   windowOpen: [],
   windowClose: [],
   renderItemIntoWindow: [],
+  transactionPacket: [],
 };
 let handleUntil = {
   windowOpen: new Set(),
   windowClose: new Set(),
+  transactionPacket: new Set(),
   renderItemIntoWindow: new Set(),
 };
 let thenCall = new Map();
@@ -2352,6 +2361,39 @@ register("renderItemIntoGui", (item) => {
         thenCall.delete(handler);
       }
       next_root_5 = iter_root_5.next();
+    }
+  }
+});
+let S32PacketConfirmTransaction = Java.type(
+  "net.minecraft.network.play.server.S32PacketConfirmTransaction"
+);
+register("packetReceived", (packet) => {
+  if (packet instanceof S32PacketConfirmTransaction) {
+    {
+      let iter_root_6 = handleNext.transactionPacket
+        .splice(0)
+        [Symbol.iterator]();
+      let next_root_6 = iter_root_6.next();
+      while (!next_root_6.done) {
+        let handlerHolder = next_root_6.value;
+
+        handlerHolder.handler();
+        next_root_6 = iter_root_6.next();
+      }
+    }
+    {
+      let iter_root_7 = handleUntil.transactionPacket[Symbol.iterator]();
+      let next_root_7 = iter_root_7.next();
+      while (!next_root_7.done) {
+        let handler = next_root_7.value;
+
+        if (handler.handler()) {
+          handleUntil.transactionPacket.delete(handler);
+          thenCall.get(handler).handler();
+          thenCall.delete(handler);
+        }
+        next_root_7 = iter_root_7.next();
+      }
     }
   }
 });
@@ -2508,6 +2550,8 @@ function events__handle_next(event) {
     handleNext.windowClose.push(event);
   } else if (event instanceof RenderItemIntoGui) {
     handleNext.renderItemIntoWindow.push(event);
+  } else if (event instanceof TransactionPacket) {
+    handleNext.transactionPacket.push(event);
   } else {
     throw "Event given to events::handle_next of type that isn't understood";
   }
@@ -2517,7 +2561,9 @@ function events__handle_until(eventFilterer, event) {
     (event instanceof RenderItemIntoGui &&
       !(eventFilterer instanceof RenderItemIntoGui)) ||
     (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
-    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose))
+    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose)) ||
+    (event instanceof TransactionPacket &&
+      !(eventFilterer instanceof TransactionPacket))
   )
     throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
   if (
@@ -2537,6 +2583,12 @@ function events__handle_until(eventFilterer, event) {
     eventFilterer instanceof WindowClose
   ) {
     handleUntil.windowClose.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof TransactionPacket &&
+    eventFilterer instanceof TransactionPacket
+  ) {
+    handleUntil.transactionPacket.add(eventFilterer);
     thenCall.set(eventFilterer, event);
   } else {
     throw "Event given to events::handle_until of type that isn't understood";
@@ -2561,6 +2613,9 @@ function std__write_into_anvil(input) {
 function gui__close_current_window() {
   // (Player.getPlayer() as any).func_175159_q();
   Client.currentGui.close();
+}
+function std__ctreload() {
+  ChatLib.command("ct load", true);
 }
 
 class LeftClick extends CustomType {}
@@ -2899,6 +2954,10 @@ function handle_next_window_close(handler) {
   return events__handle_next(new WindowClose(handler));
 }
 
+function handle_next_transaction_packet(handler) {
+  return events__handle_next(new TransactionPacket(handler));
+}
+
 function handle_until_render_item_into_gui(handler_until, handler) {
   return events__handle_until(
     new RenderItemIntoGui(handler_until),
@@ -3063,6 +3122,44 @@ function run_on_current_hotbar_slot(out_file, done) {
   });
 }
 
+function run_on_slot(out_file, i, done) {
+  return run_on_current_hotbar_slot(out_file, () => {
+    std__log2("I'm done slot: " + to_string$2(i));
+    player__set_held_slot_index(i + 1);
+    return handle_next_transaction_packet(() => {
+      return handle_next_transaction_packet(() => {
+        return handle_next_transaction_packet(() => {
+          return handle_next_transaction_packet(() => {
+            return handle_next_transaction_packet(() => {
+              return handle_next_transaction_packet(() => {
+                return handle_next_transaction_packet(() => {
+                  return handle_next_transaction_packet(() => {
+                    return handle_next_transaction_packet(() => {
+                      return handle_next_transaction_packet(() => {
+                        return handle_next_transaction_packet(() => {
+                          return handle_next_transaction_packet(() => {
+                            return handle_next_transaction_packet(() => {
+                              return handle_next_transaction_packet(() => {
+                                return handle_next_transaction_packet(() => {
+                                  return done();
+                                });
+                              });
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
 function start() {
   let out_file = std__read_file("small_edit_out_file_path.txt");
   std__log2("out file: " + out_file);
@@ -3081,54 +3178,15 @@ function start() {
             },
             () => {
               std__log2("I'm starting!");
-              return run_on_current_hotbar_slot(out_file, () => {
-                std__log2("I'm done slot: " + to_string$2(0));
-                player__set_held_slot_index(player__get_held_slot_index() + 1);
-                return run_on_current_hotbar_slot(out_file, () => {
-                  std__log2("I'm done slot: " + to_string$2(1));
-                  player__set_held_slot_index(
-                    player__get_held_slot_index() + 1
-                  );
-                  return run_on_current_hotbar_slot(out_file, () => {
-                    std__log2("I'm done slot: " + to_string$2(2));
-                    player__set_held_slot_index(
-                      player__get_held_slot_index() + 1
-                    );
-                    return run_on_current_hotbar_slot(out_file, () => {
-                      std__log2("I'm done slot: " + to_string$2(3));
-                      player__set_held_slot_index(
-                        player__get_held_slot_index() + 1
-                      );
-                      return run_on_current_hotbar_slot(out_file, () => {
-                        std__log2("I'm done slot: " + to_string$2(4));
-                        player__set_held_slot_index(
-                          player__get_held_slot_index() + 1
-                        );
-                        return run_on_current_hotbar_slot(out_file, () => {
-                          std__log2("I'm done slot: " + to_string$2(5));
-                          player__set_held_slot_index(
-                            player__get_held_slot_index() + 1
-                          );
-                          return run_on_current_hotbar_slot(out_file, () => {
-                            std__log2("I'm done slot: " + to_string$2(6));
-                            player__set_held_slot_index(
-                              player__get_held_slot_index() + 1
-                            );
-                            return run_on_current_hotbar_slot(out_file, () => {
-                              std__log2("I'm done slot: " + to_string$2(7));
-                              player__set_held_slot_index(
-                                player__get_held_slot_index() + 1
-                              );
-                              return run_on_current_hotbar_slot(
-                                out_file,
-                                () => {
-                                  std__log2("I'm done slot: " + to_string$2(8));
-                                  player__set_held_slot_index(
-                                    player__get_held_slot_index() + 1
-                                  );
-                                  return state;
-                                }
-                              );
+              return run_on_slot(out_file, 0, () => {
+                return run_on_slot(out_file, 1, () => {
+                  return run_on_slot(out_file, 2, () => {
+                    return run_on_slot(out_file, 3, () => {
+                      return run_on_slot(out_file, 4, () => {
+                        return run_on_slot(out_file, 5, () => {
+                          return run_on_slot(out_file, 6, () => {
+                            return run_on_slot(out_file, 7, () => {
+                              return state;
                             });
                           });
                         });
@@ -3144,6 +3202,17 @@ function start() {
           return state;
         }
       ),
+      new CustomKeybind(
+        "KEY_X",
+        "reload ct",
+        (state) => {
+          std__ctreload();
+          return state;
+        },
+        (state, _) => {
+          return state;
+        }
+      ),
     ]),
     toList([])
   );
@@ -3151,7 +3220,7 @@ function start() {
 }
 
 function main() {
-  std__log2("Running dotstoops@v1");
+  std__log2("Running dotstoops@v1.3");
   start$2();
   start$1();
   return start();

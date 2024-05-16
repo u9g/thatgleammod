@@ -57,3 +57,6 @@ pub fn click(slot: Int, click_type: ClickType) {
 
 @external(javascript, "../../../../../src/ct/ct_std", "std__write_into_anvil")
 pub fn write_into_anvil(to_write: String) -> Nil
+
+@external(javascript, "../../../../../src/ct/ct_std", "std__ctreload")
+pub fn ctreload() -> Nil

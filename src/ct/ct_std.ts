@@ -343,11 +343,13 @@ const handleNext = {
   windowOpen: [] as WindowOpen[],
   windowClose: [] as WindowClose[],
   renderItemIntoWindow: [] as RenderItemIntoGui[],
+  transactionPacket: [] as TransactionPacket[],
 };
 
 const handleUntil = {
   windowOpen: new Set() as Set<WindowOpen>,
   windowClose: new Set() as Set<WindowClose>,
+  transactionPacket: new Set() as Set<TransactionPacket>,
   renderItemIntoWindow: new Set() as Set<RenderItemIntoGui>,
 };
 
@@ -416,6 +418,25 @@ register("renderItemIntoGui", (item) => {
       handleUntil.renderItemIntoWindow.delete(handler);
       thenCall.get(handler)!!.handler(_item);
       thenCall.delete(handler);
+    }
+  }
+});
+
+const S32PacketConfirmTransaction = Java.type(
+  "net.minecraft.network.play.server.S32PacketConfirmTransaction"
+);
+
+register("packetReceived", (packet) => {
+  if (packet instanceof S32PacketConfirmTransaction) {
+    for (const handlerHolder of handleNext.transactionPacket.splice(0)) {
+      handlerHolder.handler();
+    }
+    for (const handler of handleUntil.transactionPacket) {
+      if (handler.handler()) {
+        handleUntil.transactionPacket.delete(handler);
+        thenCall.get(handler)!!.handler();
+        thenCall.delete(handler);
+      }
     }
   }
 });
@@ -637,6 +658,7 @@ export function std__internal_click(
 import {
   Event$,
   RenderItemIntoGui,
+  TransactionPacket,
   WindowClose,
   WindowOpen,
 } from "../../build/dev/javascript/examplemod/ct/event.mjs";
@@ -648,6 +670,8 @@ export function events__handle_next(event: Event$<any>) {
     handleNext.windowClose.push(event);
   } else if (event instanceof RenderItemIntoGui) {
     handleNext.renderItemIntoWindow.push(event);
+  } else if (event instanceof TransactionPacket) {
+    handleNext.transactionPacket.push(event);
   } else {
     throw "Event given to events::handle_next of type that isn't understood";
   }
@@ -661,7 +685,9 @@ export function events__handle_until<K, T extends Event$<K>>(
     (event instanceof RenderItemIntoGui &&
       !(eventFilterer instanceof RenderItemIntoGui)) ||
     (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
-    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose))
+    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose)) ||
+    (event instanceof TransactionPacket &&
+      !(eventFilterer instanceof TransactionPacket))
   )
     throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
 
@@ -682,6 +708,12 @@ export function events__handle_until<K, T extends Event$<K>>(
     eventFilterer instanceof WindowClose
   ) {
     handleUntil.windowClose.add(eventFilterer);
+    thenCall.set(eventFilterer, event);
+  } else if (
+    event instanceof TransactionPacket &&
+    eventFilterer instanceof TransactionPacket
+  ) {
+    handleUntil.transactionPacket.add(eventFilterer);
     thenCall.set(eventFilterer, event);
   } else {
     throw "Event given to events::handle_until of type that isn't understood";
@@ -714,4 +746,8 @@ export function std__write_into_anvil(input: string) {
 export function gui__close_current_window() {
   // (Player.getPlayer() as any).func_175159_q();
   (Client as any).currentGui.close();
+}
+
+export function std__ctreload() {
+  ChatLib.command("ct load", true);
 }
