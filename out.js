@@ -312,20 +312,6 @@ function makeError(variant, module, line, fn, message, extra) {
   return `${variant} in ${module}:${fn}():${line}, '${message}'`;
 }
 
-class Lt extends CustomType {}
-
-class Eq extends CustomType {}
-
-class Gt extends CustomType {}
-
-function lazy_guard(requirement, consequence, alternative) {
-  if (requirement) {
-    return consequence();
-  } else {
-    return alternative();
-  }
-}
-
 class Some extends CustomType {
   constructor(x0) {
     super();
@@ -414,72 +400,11 @@ class PublicCall extends CustomType {}
 
 class PrivateJavaMethodCall extends CustomType {}
 
-class ScrollUp extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
+class Lt extends CustomType {}
 
-class ScrollDown extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
+class Eq extends CustomType {}
 
-class Tick extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class CustomCommand extends CustomType {
-  constructor(custom_command_name, handler) {
-    super();
-    this.custom_command_name = custom_command_name;
-    this.handler = handler;
-  }
-}
-
-class CustomKeybind extends CustomType {
-  constructor(key, description, handler, gui_key_handler) {
-    super();
-    this.key = key;
-    this.description = description;
-    this.handler = handler;
-    this.gui_key_handler = gui_key_handler;
-  }
-}
-
-class GuiOpened extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class GuiClosed extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class PostGuiRender extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class HotbarRender extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
+class Gt extends CustomType {}
 
 function to_string$2(x) {
   return to_string(x);
@@ -2036,20 +1961,6 @@ function unwrap(result) {
   }
 }
 
-class LeftClick extends CustomType {}
-
-class ShiftLeftClick extends CustomType {}
-
-function click(slot, click_type) {
-  if (click_type instanceof LeftClick) {
-    return std__internal_click(slot, 0, 0);
-  } else if (click_type instanceof ShiftLeftClick) {
-    return std__internal_click(slot, 1, 0);
-  } else {
-    return std__internal_click(slot, 1, 1);
-  }
-}
-
 function from_raw_item(raw_item) {
   let _pipe = reflection__new_instance("Item")([raw_item]);
   let _pipe$1 = unwrap(_pipe);
@@ -2107,6 +2018,81 @@ function with_lore(item, new_lore) {
       }
     );
   });
+}
+
+function item_in_slot(slot) {
+  return reflection__call_method("getItem", new PublicCall())(slot, []);
+}
+
+function number_of_slot(slot) {
+  return reflection__call_method("getIndex", new PublicCall())(slot, []);
+}
+
+class ScrollUp extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class ScrollDown extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class Tick extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class CustomCommand extends CustomType {
+  constructor(custom_command_name, handler) {
+    super();
+    this.custom_command_name = custom_command_name;
+    this.handler = handler;
+  }
+}
+
+class CustomKeybind extends CustomType {
+  constructor(key, description, handler, gui_key_handler) {
+    super();
+    this.key = key;
+    this.description = description;
+    this.handler = handler;
+    this.gui_key_handler = gui_key_handler;
+  }
+}
+
+class GuiOpened extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class GuiClosed extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class PostGuiRender extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class HotbarRender extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
 }
 
 class WindowOpen extends CustomType {
@@ -2577,12 +2563,26 @@ function gui__close_current_window() {
   Client.currentGui.close();
 }
 
-function item_in_slot(slot) {
-  return reflection__call_method("getItem", new PublicCall())(slot, []);
+class LeftClick extends CustomType {}
+
+class ShiftLeftClick extends CustomType {}
+
+function click(slot, click_type) {
+  if (click_type instanceof LeftClick) {
+    return std__internal_click(slot, 0, 0);
+  } else if (click_type instanceof ShiftLeftClick) {
+    return std__internal_click(slot, 1, 0);
+  } else {
+    return std__internal_click(slot, 1, 1);
+  }
 }
 
-function number_of_slot(slot) {
-  return reflection__call_method("getIndex", new PublicCall())(slot, []);
+function lazy_guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence();
+  } else {
+    return alternative();
+  }
 }
 
 class Initial extends CustomType {}
@@ -2929,7 +2929,7 @@ function get_item_in_selected_hotbar_slot() {
       throw makeError(
         "panic",
         "modules/small_edit",
-        32,
+        27,
         "get_item_in_selected_hotbar_slot",
         "should have hotbar item, instead got none"
       );
@@ -2977,7 +2977,7 @@ function run_on_current_hotbar_slot(out_file, done) {
                               throw makeError(
                                 "panic",
                                 "modules/small_edit",
-                                64,
+                                59,
                                 "",
                                 "item should have a first lore line"
                               );
@@ -2994,7 +2994,7 @@ function run_on_current_hotbar_slot(out_file, done) {
                                   throw makeError(
                                     "panic",
                                     "modules/small_edit",
-                                    69,
+                                    64,
                                     "",
                                     "couldn't split the first lore line on #, the lore line: '"
                                   );
@@ -3029,7 +3029,7 @@ function run_on_current_hotbar_slot(out_file, done) {
                                           throw makeError(
                                             "panic",
                                             "modules/small_edit",
-                                            90,
+                                            85,
                                             "",
                                             "failed to get give code of item"
                                           );
@@ -3151,6 +3151,7 @@ function start() {
 }
 
 function main() {
+  std__log2("Running dotstoops@v1");
   start$2();
   start$1();
   return start();
