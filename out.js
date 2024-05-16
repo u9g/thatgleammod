@@ -1494,6 +1494,17 @@ function split$1(xs, pattern) {
   return List.fromArray(xs.split(pattern));
 }
 
+function split_once$1(haystack, needle) {
+  let index = haystack.indexOf(needle);
+  if (index >= 0) {
+    let before = haystack.slice(0, index);
+    let after = haystack.slice(index + needle.length);
+    return new Ok([before, after]);
+  } else {
+    return new Error(Nil);
+  }
+}
+
 function new_map() {
   return Dict.new();
 }
@@ -1648,6 +1659,15 @@ function do_reverse(loop$remaining, loop$accumulator) {
 
 function reverse(xs) {
   return do_reverse(xs, toList([]));
+}
+
+function first(list) {
+  if (list.hasLength(0)) {
+    return new Error(undefined);
+  } else {
+    let x = list.head;
+    return new Ok(x);
+  }
 }
 
 function do_filter_map$1(loop$list, loop$fun, loop$acc) {
@@ -1976,6 +1996,10 @@ function each(iterator, f) {
   return run(_pipe$1);
 }
 
+function split_once(x, substring) {
+  return split_once$1(x, substring);
+}
+
 function split(x, substring) {
   {
     let _pipe = x;
@@ -2014,11 +2038,13 @@ function unwrap(result) {
 
 class LeftClick extends CustomType {}
 
-class ShiftRightClick extends CustomType {}
+class ShiftLeftClick extends CustomType {}
 
 function click(slot, click_type) {
   if (click_type instanceof LeftClick) {
     return std__internal_click(slot, 0, 0);
+  } else if (click_type instanceof ShiftLeftClick) {
+    return std__internal_click(slot, 1, 0);
   } else {
     return std__internal_click(slot, 1, 1);
   }
@@ -2106,6 +2132,9 @@ class RenderItemIntoGui extends CustomType {
 
 function std__log(toLog) {
   return ChatLib.chat(toLog);
+}
+function std__log2(toLog) {
+  return console.log(toLog);
 }
 function std__chat(msg) {
   return ChatLib.say(msg);
@@ -2214,6 +2243,9 @@ function player__clear_slot(hotbarSlotToFill) {
 }
 function std__read_file(fromPath) {
   return FileLib.read(fromPath);
+}
+function std__write_to_file(fromPath, contents) {
+  return FileLib.write(fromPath, contents);
 }
 let scrollUp = [];
 let scrollDown = [];
@@ -2423,6 +2455,12 @@ function update_loop__make(init, eventHandlers, displayers) {
 function render__render_string(_, x, y, toWrite) {
   Renderer.drawStringWithShadow(toWrite, x, y);
 }
+function player__get_held_slot_index() {
+  return Player.getHeldItemIndex();
+}
+function player__set_held_slot_index(x) {
+  return Player.setHeldItemIndex(x);
+}
 function player__get_item_in_slot(slot) {
   let inventory = Player.getInventory();
   if (inventory) {
@@ -2533,6 +2571,10 @@ function std__write_into_anvil(input) {
     outputSlotItemField.set(outputSlot, outputSlotItem); // actually set the outputSlot in the anvil to the new item
     Player.getContainer().click(2, false); // click that new item
   }
+}
+function gui__close_current_window() {
+  // (Player.getPlayer() as any).func_175159_q();
+  Client.currentGui.close();
 }
 
 function item_in_slot(slot) {
@@ -2677,9 +2719,23 @@ function internal_get_from_give_code(input) {
   return unwrap(_pipe);
 }
 
+function internal_get_give_code(input) {
+  let _pipe = reflection__get_static_method(
+    "fr.atesab.act.utils.ItemUtils",
+    "getGiveCode"
+  )([input]);
+  return unwrap(_pipe);
+}
+
 function get_item_from_give_code(give_code) {
   let _pipe = internal_get_from_give_code(give_code);
   return map$2(_pipe, from_raw_item);
+}
+
+function get_item_give_code(item) {
+  let _pipe = to_item_stack(item);
+  let _pipe$1 = map$2(_pipe, internal_get_give_code);
+  return flatten(_pipe$1);
 }
 
 class ShouldUpdate extends CustomType {
@@ -2699,9 +2755,9 @@ class IsUpdated extends CustomType {
 class NotActive extends CustomType {}
 
 function start$1() {
-  let file_contents = std__read_file(
-    "C:\\Users\\___\\Documents\\code\\4-20-24\\examplemod\\z_pokeindex_output.txt"
-  );
+  let in_file = std__read_file("item_giver_in_file_path.txt");
+  std__log2("out file: " + in_file);
+  let file_contents = std__read_file(in_file);
   let items = (() => {
     let _pipe = file_contents;
     let _pipe$1 = split(_pipe, "\n");
@@ -2793,7 +2849,7 @@ function start$1() {
             throw makeError(
               "panic",
               "modules/itemgiver",
-              91,
+              90,
               "",
               "panic expression evaluated"
             );
@@ -2861,36 +2917,135 @@ function wait_for_item(item_name, handler) {
   );
 }
 
-function start() {
-  update_loop__make(
-    undefined,
-    toList([
-      new CustomCommand("ifix", (state) => {
-        std__chat("/edit");
-        return handle_next_window_open((_) => {
-          return wait_for_item("Edit Actions", () => {
-            click(34, new LeftClick());
-            return wait_for_item("Add Action", () => {
-              click(50, new LeftClick());
-              return wait_for_item("Change Player Stat", () => {
-                click(25, new LeftClick());
-                return wait_for_item("Stat", () => {
-                  click(10, new LeftClick());
-                  return handle_next_window_close(() => {
-                    std__chat("attacker_id");
-                    return handle_next_window_open((_) => {
-                      return wait_for_item("Mode", () => {
-                        click(11, new LeftClick());
-                        return wait_for_item("Set", () => {
-                          click(12, new LeftClick());
-                          return wait_for_item("Amount", () => {
-                            click(12, new LeftClick());
-                            return wait_for_item("1", () => {
-                              std__write_into_anvil("19");
-                              return handle_next_window_open((_) => {
-                                click(34, new LeftClick());
-                                click(22, new ShiftRightClick());
-                                return state;
+function get_item_in_selected_hotbar_slot() {
+  let maybe_hotbar_item = player__get_item_in_slot(
+    player__get_held_slot_index()
+  );
+  let hotbar_item = (() => {
+    if (maybe_hotbar_item instanceof Some) {
+      let item = maybe_hotbar_item[0];
+      return item;
+    } else {
+      throw makeError(
+        "panic",
+        "modules/small_edit",
+        32,
+        "get_item_in_selected_hotbar_slot",
+        "should have hotbar item, instead got none"
+      );
+    }
+  })();
+  return hotbar_item;
+}
+
+function run_on_current_hotbar_slot(out_file, done) {
+  std__chat("/edit");
+  return handle_next_window_open((_) => {
+    return wait_for_item("Edit Actions", () => {
+      click(34, new LeftClick());
+      return wait_for_item("Add Action", () => {
+        click(50, new LeftClick());
+        return wait_for_item("Change Player Stat", () => {
+          return wait_for_item("Next Page", () => {
+            click(25, new LeftClick());
+            return wait_for_item("Stat", () => {
+              click(10, new LeftClick());
+              return handle_next_window_close(() => {
+                std__chat("attacker_id");
+                return handle_next_window_open((_) => {
+                  return wait_for_item("Mode", () => {
+                    click(11, new LeftClick());
+                    return wait_for_item("Set", () => {
+                      click(12, new LeftClick());
+                      return wait_for_item("Amount", () => {
+                        click(12, new LeftClick());
+                        return wait_for_item("1", () => {
+                          let hotbar_item = get_item_in_selected_hotbar_slot();
+                          let item_lore = (() => {
+                            let _pipe = hotbar_item;
+                            return item__lore(_pipe);
+                          })();
+                          let first_line_of_lore = (() => {
+                            let $ = (() => {
+                              let _pipe = item_lore;
+                              return first(_pipe);
+                            })();
+                            if ($.isOk()) {
+                              let lore_line = $[0];
+                              return lore_line;
+                            } else {
+                              throw makeError(
+                                "panic",
+                                "modules/small_edit",
+                                64,
+                                "",
+                                "item should have a first lore line"
+                              );
+                            }
+                          })();
+                          let pokemon_number = (() => {
+                            let $ = split_once(first_line_of_lore, "#");
+                            if ($.isOk()) {
+                              let split = $[0];
+                              return split[1];
+                            } else {
+                              return (
+                                (() => {
+                                  throw makeError(
+                                    "panic",
+                                    "modules/small_edit",
+                                    69,
+                                    "",
+                                    "couldn't split the first lore line on #, the lore line: '"
+                                  );
+                                })() +
+                                first_line_of_lore +
+                                "'"
+                              );
+                            }
+                          })();
+                          std__write_into_anvil(pokemon_number);
+                          return handle_next_window_open((_) => {
+                            return wait_for_item("Go Back", () => {
+                              click(31, new LeftClick());
+                              return wait_for_item("Add Action", () => {
+                                click(22, new ShiftLeftClick());
+                                return wait_for_item("Add Action", () => {
+                                  return handle_next_window_close(() => {
+                                    gui__close_current_window();
+                                    return handle_next_window_close(() => {
+                                      gui__close_current_window();
+                                      let hotbar_item$1 =
+                                        get_item_in_selected_hotbar_slot();
+                                      let hotbar_item_give_code = (() => {
+                                        let $ = (() => {
+                                          let _pipe = hotbar_item$1;
+                                          return get_item_give_code(_pipe);
+                                        })();
+                                        if ($ instanceof Some) {
+                                          let give_code = $[0];
+                                          return give_code;
+                                        } else {
+                                          throw makeError(
+                                            "panic",
+                                            "modules/small_edit",
+                                            90,
+                                            "",
+                                            "failed to get give code of item"
+                                          );
+                                        }
+                                      })();
+                                      std__log2("writing to file");
+                                      std__write_to_file(
+                                        out_file,
+                                        std__read_file(out_file) +
+                                          "\n" +
+                                          hotbar_item_give_code
+                                      );
+                                      return done();
+                                    });
+                                  });
+                                });
                               });
                             });
                           });
@@ -2903,7 +3058,92 @@ function start() {
             });
           });
         });
-      }),
+      });
+    });
+  });
+}
+
+function start() {
+  let out_file = std__read_file("small_edit_out_file_path.txt");
+  std__log2("out file: " + out_file);
+  update_loop__make(
+    undefined,
+    toList([
+      new CustomKeybind(
+        "KEY_C",
+        "fix item using pokemon id",
+        (state) => {
+          return lazy_guard(
+            player__get_held_slot_index() !== 0,
+            () => {
+              std__log("You aren't on hotbar slot 0");
+              return state;
+            },
+            () => {
+              std__log2("I'm starting!");
+              return run_on_current_hotbar_slot(out_file, () => {
+                std__log2("I'm done slot: " + to_string$2(0));
+                player__set_held_slot_index(player__get_held_slot_index() + 1);
+                return run_on_current_hotbar_slot(out_file, () => {
+                  std__log2("I'm done slot: " + to_string$2(1));
+                  player__set_held_slot_index(
+                    player__get_held_slot_index() + 1
+                  );
+                  return run_on_current_hotbar_slot(out_file, () => {
+                    std__log2("I'm done slot: " + to_string$2(2));
+                    player__set_held_slot_index(
+                      player__get_held_slot_index() + 1
+                    );
+                    return run_on_current_hotbar_slot(out_file, () => {
+                      std__log2("I'm done slot: " + to_string$2(3));
+                      player__set_held_slot_index(
+                        player__get_held_slot_index() + 1
+                      );
+                      return run_on_current_hotbar_slot(out_file, () => {
+                        std__log2("I'm done slot: " + to_string$2(4));
+                        player__set_held_slot_index(
+                          player__get_held_slot_index() + 1
+                        );
+                        return run_on_current_hotbar_slot(out_file, () => {
+                          std__log2("I'm done slot: " + to_string$2(5));
+                          player__set_held_slot_index(
+                            player__get_held_slot_index() + 1
+                          );
+                          return run_on_current_hotbar_slot(out_file, () => {
+                            std__log2("I'm done slot: " + to_string$2(6));
+                            player__set_held_slot_index(
+                              player__get_held_slot_index() + 1
+                            );
+                            return run_on_current_hotbar_slot(out_file, () => {
+                              std__log2("I'm done slot: " + to_string$2(7));
+                              player__set_held_slot_index(
+                                player__get_held_slot_index() + 1
+                              );
+                              return run_on_current_hotbar_slot(
+                                out_file,
+                                () => {
+                                  std__log2("I'm done slot: " + to_string$2(8));
+                                  player__set_held_slot_index(
+                                    player__get_held_slot_index() + 1
+                                  );
+                                  return state;
+                                }
+                              );
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            }
+          );
+        },
+        (state, _) => {
+          return state;
+        }
+      ),
     ]),
     toList([])
   );
