@@ -324,6 +324,10 @@ export function std__read_file(fromPath: string) {
   return FileLib.read(fromPath);
 }
 
+export function std__write_to_file(fromPath: string, contents: string) {
+  return FileLib.write(fromPath, contents);
+}
+
 const scrollUp: ((...args: any[]) => any)[] = [];
 const scrollDown: ((...args: any[]) => any)[] = [];
 const tick: ((...args: any[]) => any)[] = [];
@@ -520,6 +524,13 @@ export function render__scale(_: Nil, x: number, y: number) {
   Renderer.scale(x, y);
 }
 
+export function player__get_held_slot_index(): number {
+  return Player.getHeldItemIndex();
+}
+export function player__set_held_slot_index(x: number) {
+  return Player.setHeldItemIndex(x);
+}
+
 export function player__get_item_in_slot(slot: number) {
   const inventory = Player.getInventory();
   if (inventory) {
@@ -698,4 +709,9 @@ export function std__write_into_anvil(input: string) {
 
     Player.getContainer()!!.click(2, false); // click that new item
   }
+}
+
+export function gui__close_current_window() {
+  // (Player.getPlayer() as any).func_175159_q();
+  (Client as any).currentGui.close();
 }
