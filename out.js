@@ -2081,28 +2081,7 @@ class GuiClosed extends CustomType {
   }
 }
 
-class PostGuiRender extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class HotbarRender extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class WindowOpen extends CustomType {
-  constructor(handler) {
-    super();
-    this.handler = handler;
-  }
-}
-
-class WindowClose extends CustomType {
+class RenderItemIntoGui extends CustomType {
   constructor(handler) {
     super();
     this.handler = handler;
@@ -2116,7 +2095,14 @@ class TransactionPacket extends CustomType {
   }
 }
 
-class RenderItemIntoGui extends CustomType {
+class PostGuiRender extends CustomType {
+  constructor(handler) {
+    super();
+    this.handler = handler;
+  }
+}
+
+class HotbarRender extends CustomType {
   constructor(handler) {
     super();
     this.handler = handler;
@@ -2248,6 +2234,8 @@ let hotbarRender = [];
 let guiKey = [];
 let guiOpened = [];
 let guiClosed = [];
+let renderItemIntoGui = [];
+let transactionPacket = [];
 let handleNext = {
   windowOpen: [],
   windowClose: [],
@@ -2337,6 +2325,7 @@ register("guiClosed", () => {
 });
 register("renderItemIntoGui", (item) => {
   let _item = item;
+  renderItemIntoGui.forEach((fn) => fn(_item));
   {
     let iter_root_4 = handleNext.renderItemIntoWindow
       .splice(0)
@@ -2369,6 +2358,7 @@ let S32PacketConfirmTransaction = Java.type(
 );
 register("packetReceived", (packet) => {
   if (packet instanceof S32PacketConfirmTransaction) {
+    transactionPacket.forEach((fn) => fn());
     {
       let iter_root_6 = handleNext.transactionPacket
         .splice(0)
@@ -2440,6 +2430,14 @@ function update_loop__make(init, eventHandlers, displayers) {
         });
       } else if (eventHandler instanceof GuiClosed) {
         guiClosed.push(() => {
+          value = eventHandler.handler(value);
+        });
+      } else if (eventHandler instanceof RenderItemIntoGui) {
+        renderItemIntoGui.push((item) => {
+          value = eventHandler.handler(value, item);
+        });
+      } else if (eventHandler instanceof TransactionPacket) {
+        transactionPacket.push(() => {
           value = eventHandler.handler(value);
         });
       } else {
@@ -2525,6 +2523,18 @@ function item__lore(item) {
 function std__remove_color(string) {
   return ChatLib.removeFormatting(string);
 }
+function gui__current_gui() {
+  var _a;
+  let gui =
+    (_a = Client === null || Client === void 0 ? void 0 : Client.currentGui) ===
+      null || _a === void 0
+      ? void 0
+      : _a.get();
+  if (gui) {
+    return new Some(gui);
+  }
+  return new None();
+}
 function std__to_js_array(arr) {
   return arr.toArray();
 }
@@ -2542,57 +2552,6 @@ function std__internal_click(slotId, mode, button) {
       1
     )
   );
-}
-function events__handle_next(event) {
-  if (event instanceof WindowOpen) {
-    handleNext.windowOpen.push(event);
-  } else if (event instanceof WindowClose) {
-    handleNext.windowClose.push(event);
-  } else if (event instanceof RenderItemIntoGui) {
-    handleNext.renderItemIntoWindow.push(event);
-  } else if (event instanceof TransactionPacket) {
-    handleNext.transactionPacket.push(event);
-  } else {
-    throw "Event given to events::handle_next of type that isn't understood";
-  }
-}
-function events__handle_until(eventFilterer, event) {
-  if (
-    (event instanceof RenderItemIntoGui &&
-      !(eventFilterer instanceof RenderItemIntoGui)) ||
-    (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
-    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose)) ||
-    (event instanceof TransactionPacket &&
-      !(eventFilterer instanceof TransactionPacket))
-  )
-    throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
-  if (
-    event instanceof RenderItemIntoGui &&
-    eventFilterer instanceof RenderItemIntoGui
-  ) {
-    handleUntil.renderItemIntoWindow.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof WindowOpen &&
-    eventFilterer instanceof WindowOpen
-  ) {
-    handleUntil.windowOpen.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof WindowClose &&
-    eventFilterer instanceof WindowClose
-  ) {
-    handleUntil.windowClose.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof TransactionPacket &&
-    eventFilterer instanceof TransactionPacket
-  ) {
-    handleUntil.transactionPacket.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else {
-    throw "Event given to events::handle_until of type that isn't understood";
-  }
 }
 function std__write_into_anvil(input) {
   if (Client.currentGui.getClassName() === "GuiRepair") {
@@ -2613,9 +2572,6 @@ function std__write_into_anvil(input) {
 function gui__close_current_window() {
   // (Player.getPlayer() as any).func_175159_q();
   Client.currentGui.close();
-}
-function std__ctreload() {
-  ChatLib.command("ct load", true);
 }
 
 class LeftClick extends CustomType {}
@@ -2946,34 +2902,119 @@ function start$1() {
   );
 }
 
-function handle_next_window_open(handler) {
-  return events__handle_next(new WindowOpen(handler));
+class NotRunning extends CustomType {}
+
+class WaitingToSendCommand extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
 }
 
-function handle_next_window_close(handler) {
-  return events__handle_next(new WindowClose(handler));
+class WaitingForEditActionItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
 }
 
-function handle_next_transaction_packet(handler) {
-  return events__handle_next(new TransactionPacket(handler));
+class WaitingForAddActionItem1 extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
 }
 
-function handle_until_render_item_into_gui(handler_until, handler) {
-  return events__handle_until(
-    new RenderItemIntoGui(handler_until),
-    new RenderItemIntoGui(handler)
-  );
+class WaitingForNextPageItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
 }
 
-function wait_for_item(item_name, handler) {
-  return handle_until_render_item_into_gui(
-    (item) => {
-      return std__remove_color(item__name(item)) === item_name;
-    },
-    (_) => {
-      return handler();
-    }
-  );
+class WaitingForStatItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingToWriteIntoChat extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForModeItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForSetItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForAmountItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForInitialAnvilItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForGoBackItem extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForAddActionItem2 extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForWindowClose extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingToCloseWindow extends CustomType {
+  constructor(pages_left) {
+    super();
+    this.pages_left = pages_left;
+  }
+}
+
+class WaitingForTransactionPackets extends CustomType {
+  constructor(pages_left, transaction_packets_left) {
+    super();
+    this.pages_left = pages_left;
+    this.transaction_packets_left = transaction_packets_left;
+  }
+}
+
+class ShowingItemFixerStoppedMessage extends CustomType {
+  constructor(ticks_left) {
+    super();
+    this.ticks_left = ticks_left;
+  }
 }
 
 function get_item_in_selected_hotbar_slot() {
@@ -2987,8 +3028,8 @@ function get_item_in_selected_hotbar_slot() {
     } else {
       throw makeError(
         "panic",
-        "modules/small_edit",
-        27,
+        "modules/smalledit_statemachine",
+        38,
         "get_item_in_selected_hotbar_slot",
         "should have hotbar item, instead got none"
       );
@@ -2997,226 +3038,295 @@ function get_item_in_selected_hotbar_slot() {
   return hotbar_item;
 }
 
-function run_on_current_hotbar_slot(out_file, done) {
-  std__chat("/edit");
-  return handle_next_window_open((_) => {
-    return wait_for_item("Edit Actions", () => {
-      click(34, new LeftClick());
-      return wait_for_item("Add Action", () => {
-        click(50, new LeftClick());
-        return wait_for_item("Change Player Stat", () => {
-          return wait_for_item("Next Page", () => {
-            click(25, new LeftClick());
-            return wait_for_item("Stat", () => {
-              click(10, new LeftClick());
-              return handle_next_window_close(() => {
-                std__chat("attacker_id");
-                return handle_next_window_open((_) => {
-                  return wait_for_item("Mode", () => {
-                    click(11, new LeftClick());
-                    return wait_for_item("Set", () => {
-                      click(12, new LeftClick());
-                      return wait_for_item("Amount", () => {
-                        click(12, new LeftClick());
-                        return wait_for_item("1", () => {
-                          let hotbar_item = get_item_in_selected_hotbar_slot();
-                          let item_lore = (() => {
-                            let _pipe = hotbar_item;
-                            return item__lore(_pipe);
-                          })();
-                          let first_line_of_lore = (() => {
-                            let $ = (() => {
-                              let _pipe = item_lore;
-                              return first(_pipe);
-                            })();
-                            if ($.isOk()) {
-                              let lore_line = $[0];
-                              return lore_line;
-                            } else {
-                              throw makeError(
-                                "panic",
-                                "modules/small_edit",
-                                59,
-                                "",
-                                "item should have a first lore line"
-                              );
-                            }
-                          })();
-                          let pokemon_number = (() => {
-                            let $ = split_once(first_line_of_lore, "#");
-                            if ($.isOk()) {
-                              let split = $[0];
-                              return split[1];
-                            } else {
-                              return (
-                                (() => {
-                                  throw makeError(
-                                    "panic",
-                                    "modules/small_edit",
-                                    64,
-                                    "",
-                                    "couldn't split the first lore line on #, the lore line: '"
-                                  );
-                                })() +
-                                first_line_of_lore +
-                                "'"
-                              );
-                            }
-                          })();
-                          std__write_into_anvil(pokemon_number);
-                          return handle_next_window_open((_) => {
-                            return wait_for_item("Go Back", () => {
-                              click(31, new LeftClick());
-                              return wait_for_item("Add Action", () => {
-                                click(22, new ShiftLeftClick());
-                                return wait_for_item("Add Action", () => {
-                                  return handle_next_window_close(() => {
-                                    gui__close_current_window();
-                                    return handle_next_window_close(() => {
-                                      gui__close_current_window();
-                                      let hotbar_item$1 =
-                                        get_item_in_selected_hotbar_slot();
-                                      let hotbar_item_give_code = (() => {
-                                        let $ = (() => {
-                                          let _pipe = hotbar_item$1;
-                                          return get_item_give_code(_pipe);
-                                        })();
-                                        if ($ instanceof Some) {
-                                          let give_code = $[0];
-                                          return give_code;
-                                        } else {
-                                          throw makeError(
-                                            "panic",
-                                            "modules/small_edit",
-                                            85,
-                                            "",
-                                            "failed to get give code of item"
-                                          );
-                                        }
-                                      })();
-                                      std__log2("writing to file");
-                                      std__write_to_file(
-                                        out_file,
-                                        std__read_file(out_file) +
-                                          "\n" +
-                                          hotbar_item_give_code
-                                      );
-                                      return done();
-                                    });
-                                  });
-                                });
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-}
-
-function run_on_slot(out_file, i, done) {
-  return run_on_current_hotbar_slot(out_file, () => {
-    std__log2("I'm done slot: " + to_string$2(i));
-    player__set_held_slot_index(i + 1);
-    return handle_next_transaction_packet(() => {
-      return handle_next_transaction_packet(() => {
-        return handle_next_transaction_packet(() => {
-          return handle_next_transaction_packet(() => {
-            return handle_next_transaction_packet(() => {
-              return handle_next_transaction_packet(() => {
-                return handle_next_transaction_packet(() => {
-                  return handle_next_transaction_packet(() => {
-                    return handle_next_transaction_packet(() => {
-                      return handle_next_transaction_packet(() => {
-                        return handle_next_transaction_packet(() => {
-                          return handle_next_transaction_packet(() => {
-                            return handle_next_transaction_packet(() => {
-                              return handle_next_transaction_packet(() => {
-                                return handle_next_transaction_packet(() => {
-                                  return done();
-                                });
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-}
-
 function start() {
   let out_file = std__read_file("small_edit_out_file_path.txt");
   std__log2("out file: " + out_file);
-  update_loop__make(
-    undefined,
+  return update_loop__make(
+    new NotRunning(),
     toList([
+      new TransactionPacket((state) => {
+        if (
+          state instanceof WaitingForTransactionPackets &&
+          state.transaction_packets_left === 0
+        ) {
+          let pages_left = state.pages_left;
+          state.transaction_packets_left;
+          std__log2(
+            "Final transaction packet received -> WaitingToSendCommand(" +
+              to_string$2(pages_left - 1) +
+              ")"
+          );
+          std__log2("I'm done slot: " + to_string$2(8 - pages_left));
+          return new WaitingToSendCommand(pages_left - 1);
+        } else if (state instanceof WaitingForTransactionPackets) {
+          let pages_left = state.pages_left;
+          let transaction_packets_left = state.transaction_packets_left;
+          return new WaitingForTransactionPackets(
+            pages_left,
+            transaction_packets_left - 1
+          );
+        } else {
+          return state;
+        }
+      }),
+      new Tick((state) => {
+        if (state instanceof ShowingItemFixerStoppedMessage) {
+          let ticks_left = state.ticks_left;
+          let $ = ticks_left === 0;
+          if ($) {
+            return new NotRunning();
+          } else {
+            return new ShowingItemFixerStoppedMessage(ticks_left - 1);
+          }
+        } else if (
+          state instanceof WaitingToSendCommand &&
+          state.pages_left === 0
+        ) {
+          state.pages_left;
+          return new NotRunning();
+        } else if (state instanceof WaitingToSendCommand) {
+          let pages_left = state.pages_left;
+          std__log2("I'm starting slot: " + to_string$2(8 - pages_left) + "!");
+          std__log2("Sending '/edit' -> WaitingForEditActionItem");
+          std__chat("/edit");
+          return new WaitingForEditActionItem(pages_left);
+        } else if (state instanceof WaitingToCloseWindow) {
+          let pages_left = state.pages_left;
+          let hotbar_item = get_item_in_selected_hotbar_slot();
+          let hotbar_item_give_code = (() => {
+            let $ = (() => {
+              let _pipe = hotbar_item;
+              return get_item_give_code(_pipe);
+            })();
+            if ($ instanceof Some) {
+              let give_code = $[0];
+              return give_code;
+            } else {
+              throw makeError(
+                "panic",
+                "modules/smalledit_statemachine",
+                99,
+                "",
+                "failed to get give code of item"
+              );
+            }
+          })();
+          std__log2("writing to file");
+          std__write_to_file(
+            out_file,
+            std__read_file(out_file) + "\n" + hotbar_item_give_code
+          );
+          gui__close_current_window();
+          std__log2("Close Window -> WaitingForTransactionPackets");
+          player__set_held_slot_index(8 - pages_left + 1);
+          return new WaitingForTransactionPackets(pages_left, 8);
+        } else {
+          return state;
+        }
+      }),
+      new GuiClosed((state) => {
+        if (state instanceof WaitingToWriteIntoChat) {
+          let pages_left = state.pages_left;
+          std__chat("attacker_id");
+          return new WaitingForModeItem(pages_left);
+        } else if (state instanceof WaitingForWindowClose) {
+          let pages_left = state.pages_left;
+          return new WaitingToCloseWindow(pages_left);
+        } else {
+          return state;
+        }
+      }),
+      new RenderItemIntoGui((state, item) => {
+        let $ = std__remove_color(item__name(item));
+        if (state instanceof WaitingForEditActionItem && $ === "Edit Actions") {
+          let pages_left = state.pages_left;
+          click(34, new LeftClick());
+          std__log2("clicking slot 34 -> WaitingForAddActionItem1");
+          return new WaitingForAddActionItem1(pages_left);
+        } else if (
+          state instanceof WaitingForAddActionItem1 &&
+          $ === "Add Action"
+        ) {
+          let pages_left = state.pages_left;
+          click(50, new LeftClick());
+          std__log2("clicking slot 50 -> WaitingForNextPageItem");
+          return new WaitingForNextPageItem(pages_left);
+        } else if (
+          state instanceof WaitingForNextPageItem &&
+          $ === "Next Page"
+        ) {
+          let pages_left = state.pages_left;
+          click(25, new LeftClick());
+          std__log2("clicking slot 25 -> WaitingForStatItem");
+          return new WaitingForStatItem(pages_left);
+        } else if (state instanceof WaitingForStatItem && $ === "Stat") {
+          let pages_left = state.pages_left;
+          click(10, new LeftClick());
+          return new WaitingToWriteIntoChat(pages_left);
+        } else if (state instanceof WaitingForModeItem && $ === "Mode") {
+          let pages_left = state.pages_left;
+          click(11, new LeftClick());
+          std__log2("clicking slot 11 -> WaitingForSetItem");
+          return new WaitingForSetItem(pages_left);
+        } else if (state instanceof WaitingForSetItem && $ === "Set") {
+          let pages_left = state.pages_left;
+          click(12, new LeftClick());
+          std__log2("clicking slot 12 -> WaitingForAmountItem");
+          return new WaitingForAmountItem(pages_left);
+        } else if (state instanceof WaitingForAmountItem && $ === "Amount") {
+          let pages_left = state.pages_left;
+          click(12, new LeftClick());
+          std__log2("clicking slot 12 -> WaitingForInitialAnvilItem");
+          return new WaitingForInitialAnvilItem(pages_left);
+        } else if (state instanceof WaitingForInitialAnvilItem && $ === "1") {
+          let pages_left = state.pages_left;
+          let hotbar_item = get_item_in_selected_hotbar_slot();
+          let item_lore = (() => {
+            let _pipe = hotbar_item;
+            return item__lore(_pipe);
+          })();
+          let first_line_of_lore = (() => {
+            let $1 = (() => {
+              let _pipe = item_lore;
+              return first(_pipe);
+            })();
+            if ($1.isOk()) {
+              let lore_line = $1[0];
+              return lore_line;
+            } else {
+              throw makeError(
+                "panic",
+                "modules/smalledit_statemachine",
+                167,
+                "",
+                "item should have a first lore line"
+              );
+            }
+          })();
+          let pokemon_number = (() => {
+            let $1 = split_once(first_line_of_lore, "#");
+            if ($1.isOk()) {
+              let split = $1[0];
+              return split[1];
+            } else {
+              return (
+                (() => {
+                  throw makeError(
+                    "panic",
+                    "modules/smalledit_statemachine",
+                    174,
+                    "",
+                    "couldn't split the first lore line on #, the lore line: '"
+                  );
+                })() +
+                first_line_of_lore +
+                "'"
+              );
+            }
+          })();
+          std__write_into_anvil(pokemon_number);
+          std__log2(
+            "writing '" + pokemon_number + "' -> WaitingForInitialAnvilItem"
+          );
+          return new WaitingForGoBackItem(pages_left);
+        } else if (state instanceof WaitingForGoBackItem && $ === "Go Back") {
+          let pages_left = state.pages_left;
+          click(31, new LeftClick());
+          std__log2("clicking slot 31 -> WaitingForAddActionItem2");
+          return new WaitingForAddActionItem2(pages_left);
+        } else if (
+          state instanceof WaitingForAddActionItem2 &&
+          $ === "Add Action"
+        ) {
+          let pages_left = state.pages_left;
+          click(22, new ShiftLeftClick());
+          return new WaitingForWindowClose(pages_left);
+        } else {
+          return state;
+        }
+      }),
+      new CustomKeybind(
+        "KEY_X",
+        "stop item fixer",
+        (_) => {
+          return new ShowingItemFixerStoppedMessage(20 * 5);
+        },
+        (_, _1) => {
+          return new ShowingItemFixerStoppedMessage(20 * 5);
+        }
+      ),
       new CustomKeybind(
         "KEY_C",
         "fix item using pokemon id",
         (state) => {
-          return lazy_guard(
-            player__get_held_slot_index() !== 0,
-            () => {
-              std__log("You aren't on hotbar slot 0");
-              return state;
-            },
-            () => {
-              std__log2("I'm starting!");
-              return run_on_slot(out_file, 0, () => {
-                return run_on_slot(out_file, 1, () => {
-                  return run_on_slot(out_file, 2, () => {
-                    return run_on_slot(out_file, 3, () => {
-                      return run_on_slot(out_file, 4, () => {
-                        return run_on_slot(out_file, 5, () => {
-                          return run_on_slot(out_file, 6, () => {
-                            return run_on_slot(out_file, 7, () => {
-                              return state;
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
+          if (state instanceof ShowingItemFixerStoppedMessage) {
+            let $ = player__get_held_slot_index();
+            if ($ === 0) {
+              return new WaitingToSendCommand(8);
+            } else {
+              std__log("You aren't on hotbar slot 0.");
+              return new NotRunning();
             }
-          );
-        },
-        (state, _) => {
-          return state;
-        }
-      ),
-      new CustomKeybind(
-        "KEY_X",
-        "reload ct",
-        (state) => {
-          std__ctreload();
-          return state;
+          } else if (state instanceof NotRunning) {
+            let $ = player__get_held_slot_index();
+            if ($ === 0) {
+              return new WaitingToSendCommand(8);
+            } else {
+              std__log("You aren't on hotbar slot 0.");
+              return new NotRunning();
+            }
+          } else {
+            std__log2("I'm already running!");
+            return state;
+          }
         },
         (state, _) => {
           return state;
         }
       ),
     ]),
-    toList([])
+    toList([
+      new HotbarRender((key, state) => {
+        let $ = gui__current_gui();
+        if ($ instanceof Some) {
+          return undefined;
+        } else if (state instanceof NotRunning) {
+          return undefined;
+        } else {
+          return render__render_string(
+            key,
+            100,
+            100,
+            (() => {
+              if (state instanceof ShowingItemFixerStoppedMessage) {
+                return "&cStopped successfully, it's safe to close out of any windows that were open!";
+              } else {
+                return "&fCurrently running item fixer, press 'X' to stop running.";
+              }
+            })()
+          );
+        }
+      }),
+      new PostGuiRender((key, state, _) => {
+        if (state instanceof NotRunning) {
+          return undefined;
+        } else {
+          return render__render_string(
+            key,
+            100,
+            100,
+            (() => {
+              if (state instanceof ShowingItemFixerStoppedMessage) {
+                return "&cStopped successfully, it's safe to close out of any windows that were open!";
+              } else {
+                return "&fCurrently running item fixer, press 'X' to stop running.";
+              }
+            })()
+          );
+        }
+      }),
+    ])
   );
-  return undefined;
 }
 
 function main() {

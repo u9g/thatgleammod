@@ -1,4 +1,5 @@
 import ct/gui.{type Gui}
+import ct/item.{type Item}
 
 pub type EventLoop
 
@@ -18,6 +19,8 @@ pub type EventHandler(a) {
   )
   GuiOpened(handler: fn(a, Gui) -> a)
   GuiClosed(handler: fn(a) -> a)
+  RenderItemIntoGui(handler: fn(a, Item) -> a)
+  TransactionPacket(handler: fn(a) -> a)
 }
 
 pub type Displayer(a, b) {

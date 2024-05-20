@@ -336,6 +336,8 @@ const hotbarRender: ((...args: any[]) => any)[] = [];
 const guiKey: ((...args: any[]) => any)[] = [];
 const guiOpened: ((...args: any[]) => any)[] = [];
 const guiClosed: ((...args: any[]) => any)[] = [];
+const renderItemIntoGui: ((...args: any[]) => any)[] = [];
+const transactionPacket: ((...args: any[]) => any)[] = [];
 
 type HandlerHolder = { handler: (...args: any[]) => any };
 
@@ -410,6 +412,7 @@ register("guiClosed", () => {
 
 register("renderItemIntoGui", (item) => {
   let _item = item as any;
+  renderItemIntoGui.forEach((fn) => fn(_item));
   for (const handlerHolder of handleNext.renderItemIntoWindow.splice(0)) {
     handlerHolder.handler(_item);
   }
@@ -428,6 +431,7 @@ const S32PacketConfirmTransaction = Java.type(
 
 register("packetReceived", (packet) => {
   if (packet instanceof S32PacketConfirmTransaction) {
+    transactionPacket.forEach((fn) => fn());
     for (const handlerHolder of handleNext.transactionPacket.splice(0)) {
       handlerHolder.handler();
     }
@@ -453,6 +457,8 @@ import {
   GuiClosed,
   EventHandler$,
   Displayer$,
+  RenderItemIntoGui as RenderItemIntoGui$,
+  TransactionPacket as TransactionPacket$,
 } from "../../build/dev/javascript/examplemod/ct/update_loop.mjs";
 
 export function update_loop__make<T>(
@@ -499,6 +505,14 @@ export function update_loop__make<T>(
       });
     } else if (eventHandler instanceof GuiClosed) {
       guiClosed.push(() => {
+        value = eventHandler.handler(value);
+      });
+    } else if (eventHandler instanceof RenderItemIntoGui$) {
+      renderItemIntoGui.push((item) => {
+        value = eventHandler.handler(value, item);
+      });
+    } else if (eventHandler instanceof TransactionPacket$) {
+      transactionPacket.push(() => {
         value = eventHandler.handler(value);
       });
     } else {
