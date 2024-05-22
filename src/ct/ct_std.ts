@@ -677,6 +677,9 @@ import {
   WindowOpen,
 } from "../../build/dev/javascript/examplemod/ct/event.mjs";
 
+type Assert<T extends true> = T;
+type Equals<T, U> = [T, U] extends [U, T] ? true : false;
+
 export function events__handle_next(event: Event$<any>) {
   if (event instanceof WindowOpen) {
     handleNext.windowOpen.push(event);
@@ -687,6 +690,7 @@ export function events__handle_next(event: Event$<any>) {
   } else if (event instanceof TransactionPacket) {
     handleNext.transactionPacket.push(event);
   } else {
+    const _: never = event;
     throw "Event given to events::handle_next of type that isn't understood";
   }
 }
@@ -695,41 +699,36 @@ export function events__handle_until<K, T extends Event$<K>>(
   eventFilterer: T,
   event: T
 ) {
-  if (
-    (event instanceof RenderItemIntoGui &&
-      !(eventFilterer instanceof RenderItemIntoGui)) ||
-    (event instanceof WindowOpen && !(eventFilterer instanceof WindowOpen)) ||
-    (event instanceof WindowClose && !(eventFilterer instanceof WindowClose)) ||
-    (event instanceof TransactionPacket &&
-      !(eventFilterer instanceof TransactionPacket))
-  )
-    throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
-
-  if (
-    event instanceof RenderItemIntoGui &&
-    eventFilterer instanceof RenderItemIntoGui
-  ) {
-    handleUntil.renderItemIntoWindow.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof WindowOpen &&
-    eventFilterer instanceof WindowOpen
-  ) {
-    handleUntil.windowOpen.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof WindowClose &&
-    eventFilterer instanceof WindowClose
-  ) {
-    handleUntil.windowClose.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
-  } else if (
-    event instanceof TransactionPacket &&
-    eventFilterer instanceof TransactionPacket
-  ) {
-    handleUntil.transactionPacket.add(eventFilterer);
-    thenCall.set(eventFilterer, event);
+  if (event instanceof RenderItemIntoGui) {
+    if (!(eventFilterer instanceof RenderItemIntoGui)) {
+      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+    } else {
+      handleUntil.renderItemIntoWindow.add(eventFilterer);
+      thenCall.set(eventFilterer, event);
+    }
+  } else if (event instanceof WindowOpen) {
+    if (!(eventFilterer instanceof WindowOpen)) {
+      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+    } else {
+      handleUntil.windowOpen.add(eventFilterer);
+      thenCall.set(eventFilterer, event);
+    }
+  } else if (event instanceof WindowClose) {
+    if (!(eventFilterer instanceof WindowClose)) {
+      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+    } else {
+      handleUntil.windowClose.add(eventFilterer);
+      thenCall.set(eventFilterer, event);
+    }
+  } else if (event instanceof TransactionPacket) {
+    if (!(eventFilterer instanceof TransactionPacket)) {
+      throw "Expected event and eventFilterer in events::handle_until to be of the same enumeration type, instead they were different.";
+    } else {
+      handleUntil.transactionPacket.add(eventFilterer);
+      thenCall.set(eventFilterer, event);
+    }
   } else {
+    const _: never = event;
     throw "Event given to events::handle_until of type that isn't understood";
   }
 }
